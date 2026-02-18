@@ -251,6 +251,7 @@ export default function BookBuilderPage() {
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [quickGenerating, setQuickGenerating] = useState(false);
   const [sending, setSending] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const router = useRouter();
@@ -363,6 +364,24 @@ export default function BookBuilderPage() {
       setCoverFile(null);
       setCoverPreview(null);
       setCoverAuthor("");
+    }
+  };
+
+  const handleQuickGenerate = async () => {
+    if (!bookId) return;
+    setQuickGenerating(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return toast.error("Please login again");
+
+      const url = await generateBookPdf(bookId, token, podPackageId);
+      setPdfUrl(url);
+      await load(bookId);
+      toast.success("PDF generated");
+    } catch (e: any) {
+      toast.error(e?.message || "PDF generation failed");
+    } finally {
+      setQuickGenerating(false);
     }
   };
 
@@ -830,6 +849,16 @@ export default function BookBuilderPage() {
               </SortableContext>
             </DndContext>
 
+            <div className="mb-3">
+              <Button
+                onClick={handleQuickGenerate}
+                disabled={quickGenerating || !bookId || storyList.length === 0}
+                className="bg-[#457B9D] text-white"
+              >
+                {quickGenerating ? "Generating..." : "Quick Generate PDF"}
+              </Button>
+            </div>
+
             <div className="p-4 rounded-xl border bg-white space-y-3">
               <div className="font-semibold text-slate-800">Print Settings</div>
               <div className="text-xs text-slate-500">Fields marked <span className="text-red-600">*</span> are required</div>
@@ -1160,9 +1189,9 @@ export default function BookBuilderPage() {
               <Button
                 onClick={handleAddToCart}
                 disabled={addingToCart || storyList.length === 0}
-                className="bg-green-600 text-white"
+                className="ml-auto bg-green-600 text-white"
               >
-                {addingToCart ? "Adding..." : "Add to Cart"}
+                {addingToCart ? "Adding..." : "Order Book"}
               </Button>
 
              

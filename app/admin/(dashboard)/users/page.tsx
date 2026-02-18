@@ -14,6 +14,7 @@ type User = {
   email: string;
   emailVerified: boolean;
   status: string;
+  totalDiscount?: number;
   planName: string;
   storiesCount: number;
   startDate: Date;
@@ -37,6 +38,9 @@ export default function Page() {
   const [disabledStatus, setDisabledStatus] = useState("");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isDiscountOpen, setIsDiscountOpen] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState<string>("");
+  const [selectedDiscountUser, setSelectedDiscountUser] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"new" | "old">("new");
 
   const debouncedSearch = useCallback(() => {
@@ -208,6 +212,44 @@ export default function Page() {
     setIsDeleteOpen(true);
   };
 
+  const openDiscount = (id: string) => {
+    setSelectedDiscountUser(id);
+    setDiscountAmount("");
+    setIsDiscountOpen(true);
+  };
+
+  const assignDiscount = async () => {
+    if (!selectedDiscountUser) return;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return toast.error("Please login again");
+      const amount = Number(discountAmount);
+      if (Number.isNaN(amount) || amount < 0) return toast.error("Enter a valid non-negative amount");
+
+      const res = await fetch(`${serverBaseUrl}/admin/user/${selectedDiscountUser}/discount`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ amount }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data && data.message) toast.error(data.message);
+        else toast.error("Failed to assign discount");
+        return;
+      }
+      toast.success("Discount assigned");
+      setIsDiscountOpen(false);
+      setSelectedDiscountUser(null);
+      await loadUsers();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to assign discount");
+    }
+  };
+
   const handlDelete = async () => {
     setLoading(true);
     try {
@@ -316,6 +358,9 @@ export default function Page() {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Discount
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -383,6 +428,13 @@ export default function Page() {
                           {user.status}
                         </span>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {typeof user.totalDiscount !== "undefined" ? (
+                          <span>${Number(user.totalDiscount).toFixed(2)}</span>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-2">
                           {user.status !== "blocked" ? (
@@ -436,6 +488,17 @@ export default function Page() {
                               </button>
                               <div className="absolute bottom-full right-full hidden group-hover:block bg-red-200 text-red-800 text-xs rounded py-1 px-2 z-10">
                                 Delete
+                              </div>
+                            </div>
+                            <div className="relative group">
+                              <button
+                                onClick={() => openDiscount(user._id)}
+                                className="px-2 py-2 rounded-lg transition-colors border border-gray-300 text-gray-700"
+                              >
+                                Assign Discount
+                              </button>
+                              <div className="absolute bottom-full right-full hidden group-hover:block bg-gray-200 text-gray-800 text-xs rounded py-1 px-2 z-10">
+                                Assign Discount
                               </div>
                             </div>
                         </div>
@@ -535,6 +598,41 @@ export default function Page() {
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isDiscountOpen && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-start justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mt-12">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Assign Discount
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">Enter the total discount amount for this user in dollars.</p>
+            <div className="mb-4">
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(e.target.value)}
+                className="w-full p-2 border rounded"
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => { setIsDiscountOpen(false); setSelectedDiscountUser(null); }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => assignDiscount()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Save
               </button>
             </div>
           </div>
