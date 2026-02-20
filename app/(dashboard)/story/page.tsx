@@ -649,7 +649,7 @@ const Story = () => {
                       className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 hover:shadow-lg hover:scale-105 font-medium disabled:opacity-50"
                     >
                       <BookPlus className="w-4 h-4" />
-                      Add to Book ({draftCount})
+                      Create Storybook ({draftCount})
                     </button>
                     <Button variant="outline" onClick={handleViewBook}>
   View Book
@@ -978,13 +978,13 @@ const Story = () => {
   placeholder="Story title"
   className="w-full mb-3 p-4 text-gray-900 bg-[#F1FAEE] border border-[#A8DADC] rounded-xl placeholder-gray-400 text-sm focus:outline-none focus:border-[#457B9D] focus:ring-4 focus:ring-[#A8DADC]/50 transition-all duration-200"
 />
-<span className="text-gray-500 text-xs">Book Version Story title</span>
+{/* <span className="text-gray-500 text-xs">Book Version Story title</span>
                   <input
-                    value={editedBookTitle}
+                    value={editedTitle}
                     onChange={(e) => setEditedBookTitle(e.target.value)}
                     placeholder="Book version title (optional)"
                     className="w-full mb-3 p-4 text-gray-700 bg-[#F8FAFB] border border-[#E6EEF2] rounded-xl placeholder-gray-400 text-sm focus:outline-none focus:border-[#457B9D] focus:ring-4 focus:ring-[#A8DADC]/30 transition-all duration-200"
-                  />
+                  /> */}
                           <span className="text-gray-500 text-xs"> Story</span>
                   <textarea
                     value={editedStory}
@@ -1090,7 +1090,7 @@ const Story = () => {
             </div>
             <div className="p-4 space-y-3">
               <div className="space-y-1">
-                <label className="text-sm text-slate-600">New book title</label>
+                <label className="text-sm text-slate-600">New Storybook title</label>
                 <input
                   className="w-full p-2 border rounded"
                   placeholder="e.g., Grandma's Memoirs"
@@ -1124,7 +1124,7 @@ const Story = () => {
                 }}
                 className="w-full bg-[#457B9D] text-white"
               >
-                {creatingBook ? "Creating…" : `Create "${newBookTitle || "My Keepsake Book"}" and Add`}
+                {creatingBook ? "Creating…" : `Create/Save New Storybook Title`}
               </Button>
 
               <div className="text-sm text-slate-500">Or select an existing book</div>

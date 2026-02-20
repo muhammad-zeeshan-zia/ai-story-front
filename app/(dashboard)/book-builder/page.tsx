@@ -732,32 +732,83 @@ export default function BookBuilderPage() {
         {showCoverModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl relative overflow-hidden border p-6">
-              <h3 className="text-lg font-semibold mb-4">Generate PDF — Cover options</h3>
+              <h3 className="text-lg font-semibold mb-1">Title Page Cover — Generate PDF</h3>
+              <p className="text-sm text-slate-500 mb-4">Upload an image and optional author name to appear on the book's title page.</p>
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm text-slate-600">Cover image (optional)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const f = e.target.files && e.target.files[0];
-                      if (f) {
+                  <label htmlFor="cover-upload" className="block text-sm text-slate-600 mb-2">Title-page cover image (optional)</label>
+
+                  <div
+                    onClick={() => document.getElementById('cover-upload')?.click()}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('cover-upload')?.click(); } }}
+                    role="button"
+                    tabIndex={0}
+                    className="mt-2 flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-slate-400 bg-slate-50"
+                  >
+                    {!coverPreview && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.414 6L13 2.586A2 2 0 0011.586 2H4z" />
+                        </svg>
+                        <div className="text-sm text-slate-600">Click or drag image to upload</div>
+                        <div className="text-xs text-slate-400">PNG, JPG, GIF — up to 5MB</div>
+                      </>
+                    )}
+
+                    {coverPreview && (
+                      <div className="w-full flex flex-col items-center justify-center">
+                        <img src={coverPreview} alt="Cover preview" className="max-h-44 object-contain rounded" />
+                        <div className="text-xs text-slate-500 mt-2">Preview — this image will appear on the book title page</div>
+                      </div>
+                    )}
+
+                    <input
+                      id="cover-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const f = e.target.files && e.target.files[0];
+                        if (!f) return;
+                        if (f.size > 5 * 1024 * 1024) {
+                          toast.error('File too large (max 5MB)');
+                          e.currentTarget.value = '';
+                          return;
+                        }
                         setCoverFile(f);
-                        const url = URL.createObjectURL(f);
-                        setCoverPreview(url);
-                      } else {
-                        setCoverFile(null);
-                        setCoverPreview(null);
-                      }
-                    }}
-                    className="mt-2"
-                  />
-                  {coverPreview && <img src={coverPreview} className="mt-2 w-full h-40 object-cover rounded" />}
+                        try {
+                          const data = await readFileAsDataUrl(f);
+                          setCoverPreview(data);
+                        } catch (err) {
+                          toast.error('Failed to read file');
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {coverPreview && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCoverFile(null);
+                          setCoverPreview(null);
+                          const el = document.getElementById('cover-upload') as HTMLInputElement | null;
+                          if (el) el.value = '';
+                        }}
+                        className="px-3 py-1 border rounded bg-white text-slate-700"
+                      >
+                        Remove
+                      </button>
+                    
+                    </div>
+                  )}
                 </div>
 
                 <div>
                   <label className="text-sm text-slate-600">Author name (optional)</label>
                   <input value={coverAuthor} onChange={(e) => setCoverAuthor(e.target.value)} className="w-full p-2 border rounded mt-2" />
+                  <div className="text-xs text-slate-400 mt-1">Will appear on the title page beneath the cover image. Leave blank to use default attribution.</div>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">
@@ -810,24 +861,32 @@ export default function BookBuilderPage() {
                       className="w-full p-2 border rounded"
                       value={draftTitle}
                       onChange={(e) => setDraftTitle(e.target.value)}
+                      maxLength={50}
                     />
-                    <Button
-                      onClick={async () => {
-                        try {
-                          const token = localStorage.getItem("token");
-                          if (!token) return toast.error("Please login again");
-                          await updateBookTitle(book._id, draftTitle, token);
-                          await load(bookId!);
-                          setEditingTitle(false);
-                          toast.success("Book title updated");
-                        } catch (err: any) {
-                          toast.error(err?.message || "Failed to update title");
-                        }
-                      }}
-                      className="px-3 py-1"
-                    >
-                      Save
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs text-slate-400 mr-2">{draftTitle.trim().length}/50</div>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem("token");
+                            if (!token) return toast.error("Please login again");
+                            const trimmed = draftTitle.trim();
+                            if (trimmed.length === 0) return toast.error("Title cannot be empty");
+                            if (trimmed.length > 50) return toast.error("Title must be 50 characters or less");
+                            await updateBookTitle(book._id, trimmed, token);
+                            await load(bookId!);
+                            setEditingTitle(false);
+                            toast.success("Book title updated");
+                          } catch (err: any) {
+                            toast.error(err?.message || "Failed to update title");
+                          }
+                        }}
+                        className="px-3 py-1"
+                        disabled={draftTitle.trim().length === 0}
+                      >
+                        Save
+                      </Button>
+                    </div>
                     <Button variant="outline" onClick={() => { setEditingTitle(false); setDraftTitle(book.title); }} className="px-3 py-1">
                       Cancel
                     </Button>
