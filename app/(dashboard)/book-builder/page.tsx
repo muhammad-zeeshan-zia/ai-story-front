@@ -499,7 +499,11 @@ export default function BookBuilderPage() {
         }
       }
       if (coverFinal?.errors && Object.keys(coverFinal.errors).length > 0) {
-        throw new Error("Cover validation failed: " + JSON.stringify(coverFinal.errors));
+        throw new Error(
+          "Cover validation failed: " +
+            JSON.stringify(coverFinal.errors) +
+            ". Please choose the correct binding type and generate the book again."
+        );
       }
 
       // calculate cost
