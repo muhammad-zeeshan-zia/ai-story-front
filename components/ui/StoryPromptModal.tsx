@@ -99,7 +99,6 @@ export default function StoryPromptModal({
       if (response.ok) {
         const storyId = data.response.storyId;
         const questions = data.response.questions;
-
         sessionStorage.setItem("storyId", storyId);
         sessionStorage.setItem("questions", questions);
         sessionStorage.removeItem("story");

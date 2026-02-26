@@ -766,8 +766,7 @@ const Story = () => {
                         <img
                           src={currentStoryPage.heroImageUrl}
                           alt={currentStoryPage.story_title}
-                          className={`w-full rounded-lg border border-[#E6EEF2] object-cover ${currentStoryPage.heroImageAlignment === 'left' ? 'sm:float-left sm:w-1/2 sm:mr-6' : currentStoryPage.heroImageAlignment === 'right' ? 'sm:float-right sm:w-1/2 sm:ml-6' : 'w-full sm:w-full'}`}
-                          style={{ maxHeight: 360 }}
+                          className={`w-full rounded-lg border border-[#E6EEF2] object-contain bg-gray-50 ${currentStoryPage.heroImageAlignment === 'left' ? 'sm:float-left sm:w-1/2 sm:mr-6 sm:max-h-[500px]' : currentStoryPage.heroImageAlignment === 'right' ? 'sm:float-right sm:w-1/2 sm:ml-6 sm:max-h-[500px]' : 'w-full sm:w-full sm:max-h-[600px]'}`}
                         />
                       </div>
                     )}
@@ -995,6 +994,7 @@ const Story = () => {
                   />
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Hero image (optional)</label>
+                    <p className="text-xs text-gray-500 mb-2">Your image will be fitted to preserve the entire content without cropping. Supports JPG and PNG formats.</p>
                     <div
                       className={`w-full rounded-lg border-2 ${isDragging ? 'border-dashed border-blue-400 bg-blue-50' : 'border-[#E6EEF2] bg-white'} p-3 flex flex-col sm:flex-row items-center gap-4`}
                       onDrop={onDrop}
@@ -1011,8 +1011,8 @@ const Story = () => {
 
                       <div className="flex-1 w-full">
                         {editedHeroPreview ? (
-                          <div className="w-full h-36 sm:h-40 overflow-hidden rounded-md border border-[#E6EEF2] flex items-center justify-center bg-white">
-                            <img src={editedHeroPreview} alt="preview" className="max-h-full w-auto" style={{objectFit: 'cover'}} />
+                          <div className="w-full h-36 sm:h-40 overflow-hidden rounded-md border border-[#E6EEF2] flex items-center justify-center bg-gray-50">
+                            <img src={editedHeroPreview} alt="preview" className="max-h-full max-w-full object-contain" />
                           </div>
                         ) : (
                           <div className="w-full h-36 sm:h-40 rounded-md flex items-center justify-center text-sm text-gray-500">

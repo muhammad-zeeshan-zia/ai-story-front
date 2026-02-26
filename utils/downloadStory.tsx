@@ -60,8 +60,18 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
 
       const imgDims = embeddedImage.scale(1);
       const availableW = width - margin * 2;
-      const targetW = isSideAligned ? availableW * 0.4 : availableW; // 40% width for side, full for centered
-      const scale = Math.min(1, targetW / imgDims.width);
+      const availableH = height - margin * 2;
+      
+      // For side-aligned: use 40% width, for centered: use full width
+      const targetW = isSideAligned ? availableW * 0.4 : availableW;
+      // Max height constraints: for side images use more vertical space
+      const targetH = isSideAligned ? availableH * 0.6 : availableH * 0.4;
+      
+      // Calculate scale to fit both width AND height without cropping
+      const scaleW = targetW / imgDims.width;
+      const scaleH = targetH / imgDims.height;
+      const scale = Math.min(1, scaleW, scaleH); // Use the smaller scale to ensure entire image fits
+      
       const drawW = imgDims.width * scale;
       const drawH = imgDims.height * scale;
 
@@ -95,9 +105,13 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
 
   y -= 20;
 
-  // Helper to check if current y overlaps with hero image
-  const doesOverlapImage = (currentY: number, lineH: number): boolean => {
-    if (!heroRect || !isSideAligned) return false;
+  // Track the page where the hero image is drawn (first page)
+  const imagePageRef = page;
+
+  // Helper to check if current y overlaps with hero image (only on the image's page)
+  const doesOverlapImage = (currentY: number, lineH: number, currentPage: PDFPage): boolean => {
+    // Only check overlap if we're on the same page as the image
+    if (!heroRect || !isSideAligned || currentPage !== imagePageRef) return false;
     const lineTop = currentY;
     const lineBottom = currentY - lineH;
     const imgTop = heroRect.y + heroRect.height;
@@ -106,9 +120,9 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
   };
 
   // Helper to get text area (x, maxWidth) considering image overlap
-  const getTextArea = (currentY: number, lineH: number): { xPos: number; maxW: number } => {
+  const getTextArea = (currentY: number, lineH: number, currentPage: PDFPage): { xPos: number; maxW: number } => {
     const gap = 15;
-    if (doesOverlapImage(currentY, lineH) && heroRect) {
+    if (doesOverlapImage(currentY, lineH, currentPage) && heroRect) {
       if (story.heroImageAlignment === 'left') {
         const xPos = heroRect.x + heroRect.width + gap;
         return { xPos, maxW: width - margin - xPos };
@@ -126,7 +140,7 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
     const lineHeightPx = size * lineHtMult;
 
     const pushLine = (ln: string) => {
-      const { xPos, maxW } = getTextArea(y, lineHeightPx);
+      const { xPos, maxW } = getTextArea(y, lineHeightPx, page);
       page.drawText(ln, {
         x: xPos,
         y,
@@ -140,7 +154,7 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
 
     for (const w of words) {
       const test = line ? `${line} ${w}` : w;
-      const { maxW: curMaxW } = getTextArea(y, lineHeightPx);
+      const { maxW: curMaxW } = getTextArea(y, lineHeightPx, page);
 
       if (fnt.widthOfTextAtSize(test, size) <= curMaxW) {
         line = test;
@@ -162,7 +176,7 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
 
   // Draw horizontal line respecting image overlap
   const drawHorizontalLine = () => {
-    const { xPos, maxW } = getTextArea(y, 1);
+    const { xPos, maxW } = getTextArea(y, 1, page);
     page.drawLine({
       start: { x: xPos, y },
       end: { x: xPos + maxW, y },
@@ -175,7 +189,7 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
   y -= 20;
 
   // Draw Genre and Read Time respecting image overlap
-  const { xPos: metaX } = getTextArea(y, textSize);
+  const { xPos: metaX } = getTextArea(y, textSize, page);
   page.drawText('Genre:', {
     x: metaX,
     y,
@@ -192,7 +206,7 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
   });
   y -= textSize + 5;
 
-  const { xPos: metaX2 } = getTextArea(y, textSize);
+  const { xPos: metaX2 } = getTextArea(y, textSize, page);
   page.drawText('Read Time:', {
     x: metaX2,
     y,
@@ -237,7 +251,7 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
     const lineHeightPx = textSize * lineHeight;
 
     const pushLine = (ln: string) => {
-      const { xPos, maxW } = getTextArea(y, lineHeightPx);
+      const { xPos, maxW } = getTextArea(y, lineHeightPx, page);
       page.drawText(ln, {
         x: xPos,
         y,
@@ -251,7 +265,7 @@ export const createStoryPDF = async (story: Story): Promise<PDFDocument> => {
 
     for (const w of words) {
       const test = line ? `${line} ${w}` : w;
-      const { maxW: curMaxW } = getTextArea(y, lineHeightPx);
+      const { maxW: curMaxW } = getTextArea(y, lineHeightPx, page);
 
       if (fontNormal.widthOfTextAtSize(test, textSize) <= curMaxW) {
         line = test;

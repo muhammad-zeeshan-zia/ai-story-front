@@ -39,6 +39,7 @@ export default function StoryImagePanel({ isConfirmation }: Props) {
             </div>
           </div>
         )}
+        
       </div>
     </div>
   );

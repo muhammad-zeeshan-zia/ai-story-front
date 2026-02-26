@@ -73,7 +73,6 @@ const PricingCard = ({ plan }: PricingCardProps) => {
       setDisabled(false);
     }
   };
-
   const getCardIcon = () => {
     switch (plan.type) {
       case "DIY":
