@@ -76,6 +76,7 @@ const Story = () => {
   // Book selection / navigation modals
   const [showAddToBookModal, setShowAddToBookModal] = useState(false);
   const [showViewBooksModal, setShowViewBooksModal] = useState(false);
+  const [showViewStoriesModal, setShowViewStoriesModal] = useState(false);
   const [booksLoading, setBooksLoading] = useState(false);
   const [books, setBooks] = useState<BookSummary[]>([]);
   const [bookToDeleteId, setBookToDeleteId] = useState<string | null>(null);
@@ -231,7 +232,7 @@ const Story = () => {
       return;
     }
 
-    await loadStoryPages();
+    await loadStoryPages(currentStoryPage?._id);
     toast.success(data.message);
     setIsEditing(false);
   } catch (err) {
@@ -289,7 +290,7 @@ const Story = () => {
   };
 
 
-  const loadStoryPages = async () => {
+  const loadStoryPages = async (preserveId?: string) => {
     setLoading("Retrieving something beautiful from what you've shared…");
     try {
       const token = localStorage.getItem("token");
@@ -307,9 +308,16 @@ const Story = () => {
         return;
       }
 
-      setStoryPages(data?.response?.data);
-      const totalPages = Number(data?.response?.data?.length);
-      setCurrentPage(totalPages > 0 ? totalPages - 1 : 0);
+      const pages = data?.response?.data || [];
+      setStoryPages(pages);
+      const totalPages = pages.length;
+
+      if (preserveId) {
+        const idx = pages.findIndex((p: any) => p._id === preserveId);
+        setCurrentPage(idx !== -1 ? idx : (totalPages > 0 ? totalPages - 1 : 0));
+      } else {
+        setCurrentPage(totalPages > 0 ? totalPages - 1 : 0);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch stories");
@@ -651,9 +659,18 @@ const Story = () => {
                       <BookPlus className="w-4 h-4" />
                       Create Storybook ({draftCount})
                     </button>
-                    <Button variant="outline" onClick={handleViewBook}>
-  View Book
-</Button>
+                    <button
+                      onClick={handleViewBook}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-shadow shadow-sm font-medium"
+                    >
+                      View Book
+                    </button>
+                    <button
+                      onClick={() => setShowViewStoriesModal(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-shadow shadow-sm font-medium"
+                    >
+                      View My Stories
+                    </button>
                   </div>
 
 
@@ -737,9 +754,21 @@ const Story = () => {
                             Add ({draftCount})
                           </button>
 
-                         <Button variant="outline" onClick={handleViewBook}>
-                        View Book
-                     </Button>
+                         <button
+                          onClick={() => { setShowMobileActions(false); handleViewBook(); }}
+                          className="flex items-center gap-2 px-3 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 text-sm font-medium"
+                        >
+                          View Book
+                        </button>
+                    <button
+                      onClick={() => {
+                        setShowMobileActions(false);
+                        setShowViewStoriesModal(true);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 text-sm font-medium"
+                    >
+                      View My Stories
+                    </button>
                         </div>
                       </div>
                     </div>
@@ -1217,6 +1246,43 @@ const Story = () => {
                     </button>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Stories Modal */}
+      {showViewStoriesModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-40 p-4" onClick={() => setShowViewStoriesModal(false)}>
+          <div style={{scrollbarWidth:"none"}} className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto border border-[#E6EEF2]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Your Stories</h3>
+              <button onClick={() => setShowViewStoriesModal(false)} className="p-2 rounded hover:bg-slate-100"><X className="w-4 h-4"/></button>
+            </div>
+            <div className="p-4">
+              {loading && <div className="p-3 text-sm">Loading…</div>}
+              {!loading && (!storyPages || storyPages.length === 0) && (
+                <div className="p-3 text-sm">No stories yet</div>
+              )}
+              <div className="divide-y border rounded">
+                {(!loading && storyPages.map((s, idx) => (
+                  <button
+                    key={s._id}
+                    onClick={() => {
+                      setCurrentPage(idx);
+                      setShowViewStoriesModal(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="w-full text-left p-3 hover:bg-slate-50 flex items-center justify-between"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium">{s.story_title || 'Untitled'}</div>
+                      <div className="text-xs text-slate-500">{s.read_time || ''} • {s.genre || ''}</div>
+                    </div>
+                    <span className="ml-4 inline-flex items-center px-3 py-1 rounded-full bg-blue-600 text-white text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors">Go</span>
+                  </button>
+                )))}
               </div>
             </div>
           </div>

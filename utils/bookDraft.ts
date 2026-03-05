@@ -8,9 +8,9 @@ function authHeaders(token: string) {
 }
 
 export type BookDraft = {
-    _id: string;
-    items: any[];
-  };
+  _id: string;
+  items: any[];
+};
 
 export async function createDraftBook(token: string, title?: string): Promise<BookDraft> {
   const res = await fetch(`${serverBaseUrl}/user/book`, {
@@ -72,153 +72,155 @@ export async function addStoryToBook(bookId: string, storyId: string, token: str
 }
 
 export async function reorderBook(bookId: string, storyIds: string[], token: string) {
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/reorder`, {
-      method: "PUT",
-      headers: authHeaders(token),
-      body: JSON.stringify({ storyIds }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Failed to reorder book");
-    return true;
-  }
-  
-  export async function removeStoryFromBook(bookId: string, storyId: string, token: string) {
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/items/${storyId}`, {
-      method: "DELETE",
-      headers: authHeaders(token),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Failed to remove story from book");
-    return true;
-  }
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/reorder`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    body: JSON.stringify({ storyIds }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to reorder book");
+  return true;
+}
 
-  export async function generateBookPdf(
-    bookId: string,
-    token: string,
-    podPackageId?: string,
-    coverWidth?: string,
-    coverHeight?: string,
-    coverUnit?: string,
-    coverImage?: string, // data URL or external URL
-    authorName?: string,
-  ) {
-    const body: any = {};
-    if (podPackageId) body.pod_package_id = podPackageId;
-    if (coverWidth) body.cover_width = coverWidth;
-    if (coverHeight) body.cover_height = coverHeight;
-    if (coverUnit) body.cover_unit = coverUnit;
-    if (coverImage) body.cover_image = coverImage;
-    if (authorName) body.author_name = authorName;
+export async function removeStoryFromBook(bookId: string, storyId: string, token: string) {
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/items/${storyId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to remove story from book");
+  return true;
+}
 
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/generate-pdf`, {
-      method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Failed to generate PDF");
-    return data?.response?.data?.pdfUrl as string;
-  }
+export async function generateBookPdf(
+  bookId: string,
+  token: string,
+  podPackageId?: string,
+  coverWidth?: string,
+  coverHeight?: string,
+  coverUnit?: string,
+  coverImage?: string, // data URL or external URL
+  authorName?: string,
+  audioFile?: string, // base64 data URL for optional audio
+) {
+  const body: any = {};
+  if (podPackageId) body.pod_package_id = podPackageId;
+  if (coverWidth) body.cover_width = coverWidth;
+  if (coverHeight) body.cover_height = coverHeight;
+  if (coverUnit) body.cover_unit = coverUnit;
+  if (coverImage) body.cover_image = coverImage;
+  if (authorName) body.author_name = authorName;
+  if (audioFile) body.audio_file = audioFile;
 
-  export async function validateInterior(bookId: string, token: string, source_url?: string,pod_package_id?: string) {
-    console.log("Validating interior with source_url:", source_url, "and pod_package_id:", pod_package_id);
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-interior`, {
-      method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify({ source_url, pod_package_id  }),
-    });
-    const data = await res.json();
-    console.log("Interior validation response data:", data);
-    if (!res.ok) {
-      const msg = data?.message || data || "Failed to validate interior";
-      throw new Error(msg);
-    }
-    return data?.response?.data;
-  }
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/generate-pdf`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to generate PDF");
+  return data?.response?.data?.pdfUrl as string;
+}
 
-  export async function getValidationStatus(bookId: string, token: string, validationId: string) {
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-interior/${validationId}`, {
-      method: "GET",
-      headers: authHeaders(token),
-    });
-    const data = await res.json();
-    console.log("Interior validation status response data:", data);
-    if (!res.ok) {
-      const msg = data?.message || data || "Failed to fetch validation status";
-      throw new Error(msg);
-    }
-    return data?.response?.data;
+export async function validateInterior(bookId: string, token: string, source_url?: string, pod_package_id?: string) {
+  console.log("Validating interior with source_url:", source_url, "and pod_package_id:", pod_package_id);
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-interior`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ source_url, pod_package_id }),
+  });
+  const data = await res.json();
+  console.log("Interior validation response data:", data);
+  if (!res.ok) {
+    const msg = data?.message || data || "Failed to validate interior";
+    throw new Error(msg);
   }
+  return data?.response?.data;
+}
 
-  export async function validateCover(bookId: string, token: string, payload: { source_url?: string; pod_package_id: string; interior_page_count: number }) {
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-cover`, {
-      method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      const msg = data?.message || data || "Failed to validate cover";
-      throw new Error(msg);
-    }
-    return data?.response?.data;
+export async function getValidationStatus(bookId: string, token: string, validationId: string) {
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-interior/${validationId}`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  const data = await res.json();
+  console.log("Interior validation status response data:", data);
+  if (!res.ok) {
+    const msg = data?.message || data || "Failed to fetch validation status";
+    throw new Error(msg);
   }
+  return data?.response?.data;
+}
 
-  export async function getCoverValidationStatus(bookId: string, token: string, validationId: string) {
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-cover/${validationId}`, {
-      method: "GET",
-      headers: authHeaders(token),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      const msg = data?.message || data || "Failed to fetch cover validation status";
-      throw new Error(msg);
-    }
-    return data?.response?.data;
+export async function validateCover(bookId: string, token: string, payload: { source_url?: string; pod_package_id: string; interior_page_count: number }) {
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-cover`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const msg = data?.message || data || "Failed to validate cover";
+    throw new Error(msg);
   }
+  return data?.response?.data;
+}
 
-  export async function sendToLulu(
-    bookId: string,
-    token: string,
-    payload: {
-      contact_email: string;
-      external_id?: string;
-      quantity?: number;
-      shipping_level: string;
-      pod_package_id: string;
-      coverUrl?: string;
-      production_delay?: number;
-      shipping_address: {
-        city: string;
-        country_code: string;
-        name: string;
-        phone_number: string;
-        postcode: string;
-        state_code: string;
-        street1: string;
-      };
-    }
-  ) {
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/send-to-lulu`, {
-      method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Failed to create print job");
-    return data?.response?.data;
+export async function getCoverValidationStatus(bookId: string, token: string, validationId: string) {
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/validate-cover/${validationId}`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const msg = data?.message || data || "Failed to fetch cover validation status";
+    throw new Error(msg);
   }
+  return data?.response?.data;
+}
 
-  export async function updateBookTitle(bookId: string, title: string, token: string) {
-    const res = await fetch(`${serverBaseUrl}/user/book/${bookId}`, {
-      method: "PUT",
-      headers: authHeaders(token),
-      body: JSON.stringify({ title }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Failed to update book title");
-    return data?.response?.data as BookDraft;
+export async function sendToLulu(
+  bookId: string,
+  token: string,
+  payload: {
+    contact_email: string;
+    external_id?: string;
+    quantity?: number;
+    shipping_level: string;
+    pod_package_id: string;
+    coverUrl?: string;
+    production_delay?: number;
+    shipping_address: {
+      city: string;
+      country_code: string;
+      name: string;
+      phone_number: string;
+      postcode: string;
+      state_code: string;
+      street1: string;
+    };
   }
+) {
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}/send-to-lulu`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to create print job");
+  return data?.response?.data;
+}
+
+export async function updateBookTitle(bookId: string, title: string, token: string) {
+  const res = await fetch(`${serverBaseUrl}/user/book/${bookId}`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    body: JSON.stringify({ title }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to update book title");
+  return data?.response?.data as BookDraft;
+}
 
 
 export async function calculatePrintCost(

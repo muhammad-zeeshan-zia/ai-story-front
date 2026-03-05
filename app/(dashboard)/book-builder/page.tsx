@@ -28,7 +28,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
- 
+
 
 type StoryType = {
   _id: string;
@@ -95,29 +95,29 @@ function SortableRow({
         </div>
       </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onMove && onMove(story._id, "up")}
-            className="text-slate-700 border-slate-200 hover:bg-slate-50"
-          >
-            ↑
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onMove && onMove(story._id, "down")}
-            className="text-slate-700 border-slate-200 hover:bg-slate-50"
-          >
-            ↓
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onRemove(story._id)}
-            className="text-red-600 border-red-200 hover:bg-red-50"
-          >
-            Remove
-          </Button>
-        </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={() => onMove && onMove(story._id, "up")}
+          className="text-slate-700 border-slate-200 hover:bg-slate-50"
+        >
+          ↑
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => onMove && onMove(story._id, "down")}
+          className="text-slate-700 border-slate-200 hover:bg-slate-50"
+        >
+          ↓
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => onRemove(story._id)}
+          className="text-red-600 border-red-200 hover:bg-red-50"
+        >
+          Remove
+        </Button>
+      </div>
     </div>
   );
 }
@@ -263,17 +263,17 @@ export default function BookBuilderPage() {
   const [quantity, setQuantity] = useState<number>(1);
   const [shippingLevel, setShippingLevel] = useState("MAIL");
   const [shippingOption, setShippingOption] = useState("MAIL");
-  const [trimSize, setTrimSize] = useState<string>(luluOptions.defaults.trimSize || "0600X0900");
-  const [binding, setBinding] = useState<string>(luluOptions.bindings[0].code as string);
-  const [interiorColor, setInteriorColor] = useState<string>(luluOptions.interiorColors[0].code as string);
-  const [paperType, setPaperType] = useState<string>(luluOptions.paperTypes[0].code as string);
+  const [trimSize, setTrimSize] = useState<string>(luluOptions.defaults.trimSize || "0744X0968");
+  const [binding, setBinding] = useState<string>(luluOptions.bindings[1].code as string);
+  const [interiorColor, setInteriorColor] = useState<string>(luluOptions.interiorColors[3].code as string);
+  const [paperType, setPaperType] = useState<string>(luluOptions.paperTypes[1].code as string);
   const [coverFinish, setCoverFinish] = useState<string>(luluOptions.coverFinishes[0].code as string);
   const [podPackageId, setPodPackageId] = useState<string>(() =>
     generatePodPackageId({
       size: luluOptions.defaults.trimSize as any,
-      color: luluOptions.interiorColors[0].code as any,
-      binding: luluOptions.bindings[0].code as any,
-      paper: luluOptions.paperTypes[0].code as any,
+      color: luluOptions.interiorColors[3].code as any,
+      binding: luluOptions.bindings[1].code as any,
+      paper: luluOptions.paperTypes[1].code as any,
       finish: luluOptions.coverFinishes[0].code as any,
     })
   );
@@ -298,6 +298,8 @@ export default function BookBuilderPage() {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverAuthor, setCoverAuthor] = useState<string>("");
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioFileName, setAudioFileName] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState<number>(32);
   const [shippingAddress, setShippingAddress] = useState({
     city: "Washington",
@@ -342,6 +344,11 @@ export default function BookBuilderPage() {
         coverDataUrl = await readFileAsDataUrl(coverFile);
       }
 
+      let audioDataUrl: string | undefined = undefined;
+      if (audioFile) {
+        audioDataUrl = await readFileAsDataUrl(audioFile);
+      }
+
       const url = await generateBookPdf(
         bookId,
         token,
@@ -350,7 +357,8 @@ export default function BookBuilderPage() {
         customCoverHeight && customCoverHeight.trim() !== "" ? customCoverHeight.trim() : undefined,
         customCoverUnit && customCoverUnit.trim() !== "" ? customCoverUnit.trim() : undefined,
         coverDataUrl,
-        coverAuthor && coverAuthor.trim() !== "" ? `By ${coverAuthor.trim()}` : undefined
+        coverAuthor && coverAuthor.trim() !== "" ? `By ${coverAuthor.trim()}` : undefined,
+        audioDataUrl
       );
       setPdfUrl(url);
       // refresh book state so `book.pdfUrl` reflects the newly generated PDF
@@ -364,6 +372,8 @@ export default function BookBuilderPage() {
       setCoverFile(null);
       setCoverPreview(null);
       setCoverAuthor("");
+      setAudioFile(null);
+      setAudioFileName(null);
     }
   };
 
@@ -390,9 +400,11 @@ export default function BookBuilderPage() {
     setCoverFile(null);
     setCoverPreview(null);
     setCoverAuthor("");
+    setAudioFile(null);
+    setAudioFileName(null);
   };
 
- 
+
 
   const handleAddToCart = async () => {
     if (!bookId) return;
@@ -415,18 +427,10 @@ export default function BookBuilderPage() {
         return;
       }
 
-      // require US country code and US-style phone
-      if (String(shippingAddress.country_code || "").toUpperCase() !== "US") {
-        toast.error("Country code must be 'US' (use two-letter code)");
-        return;
-      }
-      if (!/^[A-Za-z]{2}$/.test(String(shippingAddress.state_code || "").trim())) {
-        toast.error("State code must be a two-letter code (e.g. NY)");
-        return;
-      }
-      const phonePatternCart = /^\+1 \d{6,15}$/;
+      // validate phone format: <country code> <number> e.g. +92 6868, 1 787979
+      const phonePatternCart = /^\+?\d{1,3} \d{4,15}$/;
       if (!phonePatternCart.test(String(shippingAddress.phone_number || "").trim())) {
-        toast.error("Phone number must be in format: +1 748378943");
+        toast.error("Phone number must be in format: +1 6868... or 1 787979... (country code, space, number)");
         return;
       }
       console.log("Book before PDF generation:", book);
@@ -445,24 +449,48 @@ export default function BookBuilderPage() {
       const lib = await import("@/utils/bookDraft");
 
       // validate interior
+      // const interiorResp = await lib.validateInterior(bookId, token, interiorSource, podPackageId);
+      // let interiorFinal = interiorResp;
+      // if (interiorResp && interiorResp.id) {
+      //   const max = 12;
+      //   for (let i = 0; i < max; i++) {
+      //     const s = await lib.getValidationStatus(bookId, token, String(interiorResp.id));
+      //     interiorFinal = s;
+      //     const st = (s?.status || s?.state || "").toString().toUpperCase();
+      //     if (s?.errors && Object.keys(s.errors).length > 0) break;
+      //     if (st && !["VALIDATING", "NORMALIZING", "PROCESSING"].includes(st)) break;
+      //     await new Promise((r) => setTimeout(r, 2000));
+      //   }
+      // }
+      // if (interiorFinal?.errors && Object.keys(interiorFinal.errors).length > 0) {
+      //   throw new Error("Interior validation failed: " + JSON.stringify(interiorFinal.errors));
+      // }
+
+      // console.log("Book:", book);
+
       const interiorResp = await lib.validateInterior(bookId, token, interiorSource, podPackageId);
       let interiorFinal = interiorResp;
+
+      const terminalStates = ["VALIDATED", "COMPLETED", "ERROR", "FAILED", "REJECTED"];
+
       if (interiorResp && interiorResp.id) {
-        const max = 12;
+        const max = 10; // Increased max attempts to account for longer validation times
         for (let i = 0; i < max; i++) {
           const s = await lib.getValidationStatus(bookId, token, String(interiorResp.id));
           interiorFinal = s;
-          const st = (s?.status || s?.state || "").toString().toUpperCase();
+
           if (s?.errors && Object.keys(s.errors).length > 0) break;
-          if (st && !["VALIDATING", "NORMALIZING", "PROCESSING"].includes(st)) break;
+
+          const st = (s?.status || s?.state || "").toString().toUpperCase();
+          // FIX: Break ONLY if we hit a finished state
+          if (terminalStates.includes(st)) break;
+
           await new Promise((r) => setTimeout(r, 2000));
         }
       }
       if (interiorFinal?.errors && Object.keys(interiorFinal.errors).length > 0) {
         throw new Error("Interior validation failed: " + JSON.stringify(interiorFinal.errors));
       }
-
-      console.log("Book:", book);
       // validate cover (ensure cover PDF exists first)
       // const coverSource = (book as any)?.coverPdfUrl || coverUrl;
       // if (!coverSource) {
@@ -501,8 +529,8 @@ export default function BookBuilderPage() {
       if (coverFinal?.errors && Object.keys(coverFinal.errors).length > 0) {
         throw new Error(
           "Cover validation failed: " +
-            JSON.stringify(coverFinal.errors) +
-            ". Please choose the correct binding type and generate the book again."
+          JSON.stringify(coverFinal.errors) +
+          ". Please choose the correct binding type and generate the book again."
         );
       }
 
@@ -527,7 +555,7 @@ export default function BookBuilderPage() {
       };
 
       const cost = await calculatePrintCost(bookId, token, costPayload);
-     
+
 
       // compute total
       // const totalTax = Number(cost.total_tax || 0);
@@ -538,13 +566,13 @@ export default function BookBuilderPage() {
       // const totalPrice = totalTax + totalIncl + fulfillmentTax + shippingIncl - discount;
 
 
-       const salesTax = Number(cost.total_tax || 0);
-    const fulfillment_fee = Number(cost.fulfillment_cost?.total_cost_excl_tax || 0);
-    const shipping_cost = Number(cost.shipping_cost?.total_cost_excl_tax || 0);
-    const sub_total = Number(cost.line_item_costs[0]?.unit_tier_cost || 0);
-    const discount = Number(cost.total_discount_amount || 0);
-   const  totalPrice= salesTax + sub_total + fulfillment_fee + shipping_cost - discount;
-      const finalprice=cost.total_cost_incl_tax;
+      const salesTax = Number(cost.total_tax || 0);
+      const fulfillment_fee = Number(cost.fulfillment_cost?.total_cost_excl_tax || 0);
+      const shipping_cost = Number(cost.shipping_cost?.total_cost_excl_tax || 0);
+      const sub_total = Number(cost.line_item_costs[0]?.unit_tier_cost || 0);
+      const discount = Number(cost.total_discount_amount || 0);
+      const totalPrice = salesTax + sub_total + fulfillment_fee + shipping_cost - discount;
+      const finalprice = cost.total_cost_incl_tax;
       const cartPayload = {
         title: book?.title || "",
         name: shippingAddress.name || shippingAddress?.name || "",
@@ -603,19 +631,10 @@ export default function BookBuilderPage() {
         return;
       }
 
-      // validate phone format: +<country code> <number> e.g. +1 748378943
-      // enforce US-only: country code must be 'US', state_code must be two letters, and phone must start with +1
-      if (String(shippingAddress.country_code || "").toUpperCase() !== "US") {
-        toast.error("Country code must be 'US' (use two-letter code)");
-        return;
-      }
-      if (!/^[A-Za-z]{2}$/.test(String(shippingAddress.state_code || "").trim())) {
-        toast.error("State code must be a two-letter code (e.g. NY)");
-        return;
-      }
-      const phonePattern = /^\+1 \d{6,15}$/;
+      // validate phone format: <country code> <number> e.g. +92 6868, 1 787979
+      const phonePattern = /^\+?\d{1,3} \d{4,15}$/;
       if (!phonePattern.test(String(shippingAddress.phone_number).trim())) {
-        toast.error("Phone number must be in format: +1 748378943");
+        toast.error("Phone number must be in format: +92 6868 or 1 787979 (country code, space, number)");
         return;
       }
 
@@ -651,9 +670,9 @@ export default function BookBuilderPage() {
     if (!bookId) return;
     setValidating(true);
     setValidationResult(null);
- 
+
     setValidationId(null);
-    
+
     try {
       const token = localStorage.getItem("token");
       if (!token) return toast.error("Please login again");
@@ -804,7 +823,7 @@ export default function BookBuilderPage() {
                       >
                         Remove
                       </button>
-                    
+
                     </div>
                   )}
                 </div>
@@ -813,6 +832,47 @@ export default function BookBuilderPage() {
                   <label className="text-sm text-slate-600">Author name (optional)</label>
                   <input value={coverAuthor} onChange={(e) => setCoverAuthor(e.target.value)} className="w-full p-2 border rounded mt-2" />
                   <div className="text-xs text-slate-400 mt-1">Will appear on the title page beneath the cover image. Leave blank to use default attribution.</div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-600">Audio file (optional)</label>
+                  <div className="text-xs text-slate-400 mt-1 mb-2">Attach an audio file and a QR code will be added to the book so readers can scan and listen.</div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="audio-upload"
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => {
+                        const f = e.target.files && e.target.files[0];
+                        if (!f) return;
+                        if (f.size > 25 * 1024 * 1024) {
+                          toast.error('Audio file too large (max 25MB)');
+                          e.currentTarget.value = '';
+                          return;
+                        }
+                        setAudioFile(f);
+                        setAudioFileName(f.name);
+                      }}
+                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
+                  {audioFileName && (
+                    <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
+                      <span className="text-sm text-blue-700 truncate flex-1">🎵 {audioFileName}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAudioFile(null);
+                          setAudioFileName(null);
+                          const el = document.getElementById('audio-upload') as HTMLInputElement | null;
+                          if (el) el.value = '';
+                        }}
+                        className="px-2 py-1 text-xs border rounded bg-white text-slate-700 hover:bg-red-50 hover:text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">
@@ -852,7 +912,7 @@ export default function BookBuilderPage() {
         {book && (
           <div className="space-y-4">
             <div className="p-4 rounded-xl border bg-white">
-              <div className="text-sm text-slate-500">Title</div>
+              <div className="text-sm text-slate-500">StoryBook  Title</div>
               <div className="text-lg font-semibold flex items-center gap-3">
                 {!editingTitle ? (
                   <>
@@ -912,7 +972,7 @@ export default function BookBuilderPage() {
               </SortableContext>
             </DndContext>
 
-            <div className="mb-3">
+            <div className="mb-3 flex items-center gap-2">
               <Button
                 onClick={handleQuickGenerate}
                 disabled={quickGenerating || !bookId || storyList.length === 0}
@@ -920,6 +980,21 @@ export default function BookBuilderPage() {
               >
                 {quickGenerating ? "Generating..." : "Quick Generate PDF"}
               </Button>
+              <div className="relative group">
+                <button
+                  type="button"
+                  className="w-6 h-6 rounded-full bg-slate-200 text-slate-600 text-xs font-bold flex items-center justify-center hover:bg-slate-300 transition-colors cursor-pointer"
+                  aria-label="Info about Quick Generate"
+                >
+                  i
+                </button>
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  <p className="font-semibold mb-1">Quick Generate PDF</p>
+                  <p>Generate quick preview PDF (no cover image or extra details).</p>
+                  <p className="mt-1">Click the button and wait for it to return back to its blue color. Then scroll down and click &quot;Preview PDF&quot;.</p>
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-slate-800"></div>
+                </div>
+              </div>
             </div>
 
             <div className="p-4 rounded-xl border bg-white space-y-3">
@@ -1011,7 +1086,7 @@ export default function BookBuilderPage() {
                     <option value="EXPRESS">EXPRESS</option>
                   </select>
                 </div>
-                
+
                 {/* <div>
                   <label className="block text-xs text-slate-600 mb-1">Trim Size</label>
                   <select
@@ -1217,7 +1292,7 @@ export default function BookBuilderPage() {
               >
                 Check Price
               </Button> */}
- {((book && (book as any).pdfUrl) || pdfUrl) && (
+              {((book && (book as any).pdfUrl) || pdfUrl) && (
                 <div className="flex items-center gap-2">
                   <Button
                     onClick={() => window.open((book && (book as any).pdfUrl) || pdfUrl, "_blank")}
@@ -1225,7 +1300,7 @@ export default function BookBuilderPage() {
                   >
                     Preview PDF
                   </Button>
-{/* 
+                  {/* 
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -1257,7 +1332,7 @@ export default function BookBuilderPage() {
                 {addingToCart ? "Adding..." : "Order Book"}
               </Button>
 
-             
+
 
               {/* Validation results are shown via toasts. */}
 

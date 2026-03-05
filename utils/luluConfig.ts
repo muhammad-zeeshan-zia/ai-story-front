@@ -49,7 +49,7 @@ export interface BookSpecification {
 
 export const luluOptions = {
   defaults: {
-    trimSize: "0600X0900", // default: US Trade (6x9)
+    trimSize: "0744X0968", // default: US Trade (6x9)
   },
   // available trim sizes for users to choose
   sizes: [
