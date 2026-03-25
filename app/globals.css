@@ -73,3 +73,34 @@ button {
 .ant-alert-success {
   color: #52c41a !important;
 }
+
+/* Quill editor overrides (scoped) */
+.custom-quill-container .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  padding: 12px 24px !important;
+  background-color: #fafbfc;
+}
+
+.custom-quill-container .ql-container.ql-snow {
+  border: none !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  color: #4b5563 !important;
+}
+
+.custom-quill-container .ql-editor {
+  padding: 24px !important;
+  min-height: 400px;
+}
+
+/* Ensure common formatting tags are visually applied */
+.custom-quill-container .ql-editor em,
+.custom-quill-container .ql-editor i {
+  font-style: italic;
+}
+
+.custom-quill-container .ql-editor strong,
+.custom-quill-container .ql-editor b {
+  font-weight: 700;
+}

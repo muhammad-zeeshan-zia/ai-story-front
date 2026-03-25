@@ -60,6 +60,17 @@ const menu = [
     href: "/admin/stories",
   },
   {
+    icon: < MdOutlineAutoStories/>,
+    label: "Landing Page Editor",
+    href: "/admin/landingpage-editor",
+  },
+   {
+    icon: < MdOutlineAutoStories/>,
+    label: "Email Editor",
+    href: "/admin/email-editor",
+  },
+
+  {
     icon: <LiaCrownSolid />,
     label: "Plans",
     href: "/admin/plans",

@@ -22,7 +22,9 @@ const PricingSection = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log("Fetch plans response status:", response);
       const data = await response.json();
+     
       if (!response.ok) {
         const msg = data.message || "Failed to fetch plans";
         return toast.error(msg);
