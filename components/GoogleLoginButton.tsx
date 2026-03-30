@@ -18,9 +18,39 @@ const GoogleLoginButton = () => {
       const result = await response.json();
       if (response.ok) {
         const { token, data } = result.response;
-        router.push("/landing-page");
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify({ email: data.email }));
+
+        // Google users are non-public by default.
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ email: data.email, public: false })
+        );
+
+        // If no active paid subscription, send to select-plan.
+        try {
+          const subRes = await fetch(`${serverBaseUrl}/user/plan/subscription`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (subRes.ok) {
+            const subData = await subRes.json();
+            const expiryDate = subData?.response?.expiryDate;
+            const hasActivePaidSubscription = Boolean(
+              expiryDate && new Date(expiryDate) > new Date()
+            );
+            router.push(
+              hasActivePaidSubscription ? "/landing-page" : "/select-plan"
+            );
+          } else {
+            router.push("/select-plan");
+          }
+        } catch {
+          router.push("/select-plan");
+        }
       } else {
         console.error(result.message);
       }

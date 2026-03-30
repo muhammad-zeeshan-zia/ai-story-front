@@ -10,6 +10,9 @@ import { getBook, reorderBook, removeStoryFromBook, generateBookPdf, updateBookT
 import { createCartItem } from "@/utils/cartClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link"
+import { handleSessionExpiry } from "@/utils/handleSessionExpiry";
+
+const serverBaseUrl = process.env.NEXT_PUBLIC_BACKEND_SERVER_URL;
 
 
 
@@ -255,6 +258,8 @@ export default function BookBuilderPage() {
   const [sending, setSending] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const router = useRouter();
+  const [hasPaidSubscription, setHasPaidSubscription] = useState(false);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<any>(null);
   const [validationId, setValidationId] = useState<string | null>(null);
@@ -289,6 +294,64 @@ export default function BookBuilderPage() {
       })
     );
   }, [trimSize, binding, interiorColor, paperType, coverFinish]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchSubscription = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token || !serverBaseUrl) {
+          if (!cancelled) {
+            setHasPaidSubscription(false);
+            setSubscriptionChecked(true);
+          }
+          return;
+        }
+
+        const response = await fetch(`${serverBaseUrl}/user/plan/subscription`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        let data: any = null;
+        try {
+          data = await response.json();
+        } catch {
+          data = null;
+        }
+
+        if (cancelled) return;
+
+        if (response.ok) {
+          const expiry = data?.response?.expiryDate;
+          if (expiry) {
+            const expiryDate = new Date(expiry);
+            setHasPaidSubscription(expiryDate > new Date());
+          } else {
+            // If backend doesn't provide an expiry, assume active.
+            setHasPaidSubscription(true);
+          }
+        } else {
+          // 404 is expected when the user has no paid subscription (trial users included)
+          if (handleSessionExpiry(data?.message, router)) return;
+          setHasPaidSubscription(false);
+        }
+      } catch {
+        if (!cancelled) setHasPaidSubscription(false);
+      } finally {
+        if (!cancelled) setSubscriptionChecked(true);
+      }
+    };
+
+    fetchSubscription();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
   const [coverUrl, setCoverUrl] = useState("");
   const [customCoverWidth, setCustomCoverWidth] = useState<string>("");
   const [customCoverHeight, setCustomCoverHeight] = useState<string>("");
@@ -997,10 +1060,28 @@ export default function BookBuilderPage() {
               </div>
             </div>
 
-            <div className="p-4 rounded-xl border bg-white space-y-3">
-              <div className="font-semibold text-slate-800">Print Settings</div>
-              <div className="text-xs text-slate-500">Fields marked <span className="text-red-600">*</span> are required</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {subscriptionChecked && !hasPaidSubscription && (
+              <div className="p-4 rounded-xl border bg-white space-y-2">
+                <div className="font-semibold text-slate-800">Want a hardcopy of your book?</div>
+                <div className="text-sm text-slate-600">
+                  Buy a subscription plan to enable hardcopy ordering.
+                </div>
+                <div className="pt-1">
+                  <Button
+                    onClick={() => router.push("/select-plan")}
+                    className="bg-[#457B9D] text-white"
+                  >
+                    View Plans
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {hasPaidSubscription && (
+              <div className="p-4 rounded-xl border bg-white space-y-3">
+                <div className="font-semibold text-slate-800">Print Settings</div>
+                <div className="text-xs text-slate-500">Fields marked <span className="text-red-600">*</span> are required</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
                 <div>
                   <label className="block text-xs text-slate-600 mb-1">Contact Email <span className="text-red-600">*</span></label>
@@ -1250,8 +1331,9 @@ export default function BookBuilderPage() {
                     onChange={(e) => setShippingAddress({ ...shippingAddress, phone_number: e.target.value })}
                   />
                 </div>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="pt-4 flex gap-3">
               {/* <Button
@@ -1261,13 +1343,15 @@ export default function BookBuilderPage() {
                 Generate PDF (Next Phase)
               </Button> */}
 
-              <Button
-                onClick={handleGeneratePdf}
-                disabled={generating || storyList.length === 0}
-                className="bg-[#457B9D] text-white"
-              >
-                {generating ? "Generating..." : "Generate PDF"}
-              </Button>
+              {hasPaidSubscription && (
+                <Button
+                  onClick={handleGeneratePdf}
+                  disabled={generating || storyList.length === 0}
+                  className="bg-[#457B9D] text-white"
+                >
+                  {generating ? "Generating..." : "Generate PDF"}
+                </Button>
+              )}
 
               {/* <Button
                 onClick={handleValidateAll}
@@ -1324,13 +1408,15 @@ export default function BookBuilderPage() {
                   </Button> */}
                 </div>
               )}
-              <Button
-                onClick={handleAddToCart}
-                disabled={addingToCart || storyList.length === 0}
-                className="ml-auto bg-green-600 text-white"
-              >
-                {addingToCart ? "Adding..." : "Order Book"}
-              </Button>
+              {hasPaidSubscription && (
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={addingToCart || storyList.length === 0}
+                  className="ml-auto bg-green-600 text-white"
+                >
+                  {addingToCart ? "Adding..." : "Order Book"}
+                </Button>
+              )}
 
 
 

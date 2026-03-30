@@ -41,12 +41,46 @@ const Login = () => {
       const responseData = await response.json();
       if (response.ok) {
         const { token, data } = responseData.response;
-        router.push("/landing-page");
         localStorage.setItem("token", token);
         localStorage.setItem(
           "user",
           JSON.stringify({ email: data.email, public: data.public })
         );
+
+        // Public users don't use subscription plans.
+        if (data.public) {
+          router.push("/landing-page");
+          toast.success(responseData.message);
+          return;
+        }
+
+        // Non-public users: if no active paid subscription, send to select-plan.
+        try {
+          const subRes = await fetch(`${serverBaseUrl}/user/plan/subscription`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (subRes.ok) {
+            const subData = await subRes.json();
+            const expiryDate = subData?.response?.expiryDate;
+            const hasActivePaidSubscription = Boolean(
+              expiryDate && new Date(expiryDate) > new Date()
+            );
+
+            router.push(
+              hasActivePaidSubscription ? "/landing-page" : "/select-plan"
+            );
+          } else {
+            router.push("/select-plan");
+          }
+        } catch {
+          router.push("/select-plan");
+        }
+
         toast.success(responseData.message);
       } else if (response.status === 403) {
         const error = typeof responseData.error;

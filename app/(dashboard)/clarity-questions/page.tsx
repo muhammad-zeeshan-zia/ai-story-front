@@ -86,6 +86,11 @@ export default function ClarityQuestions() {
       const data = await response.json();
       if (!response.ok) {
         if (handleSessionExpiry(data.message, router)) return;
+        if (response.status === 402) {
+          toast.error(data.message || "Please select a plan first");
+          router.push("/select-plan");
+          return;
+        }
         const msg = data.message || "Failed to create story";
         return toast.error(msg);
       } else {

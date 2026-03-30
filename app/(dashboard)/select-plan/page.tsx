@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import PricingCard from "@/components/ui/PricingCard";
 const serverBaseUrl = process.env.NEXT_PUBLIC_BACKEND_SERVER_URL;
 
 const PricingSection = () => {
   const [plans, setPlans] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     fetchPlans();
@@ -41,6 +43,14 @@ const PricingSection = () => {
       <div className="p-10 relative z-10 bg-[url('/assets/letter-image.png')]">
         <div className="relative flex bg-[#F1FAEE] rounded-2xl pb-15 flex-col items-center justify-center min-h-screen">
           <div className="bg-[url('/assets/letter-image.png')] rounded-t-2xl w-full h-[250px] bg-cover bg-center flex justify-center items-center">
+            <button
+              type="button"
+              aria-label="Cancel"
+              onClick={() => router.push("/landing-page")}
+              className="absolute top-5 right-5 h-10 w-10 rounded-full bg-white/20 text-white text-2xl leading-none flex items-center justify-center"
+            >
+              ×
+            </button>
             <div className="text-center text-white px-4 py-12">
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 font-[Cormorant_Garamond]">
                 How do you want to continue?
