@@ -375,9 +375,27 @@ export default function BookBuilderPage() {
   });
   const [costEstimate, setCostEstimate] = useState<any>(null);
 
+  const requirePaidSubscriptionForPdf = () => {
+    if (!subscriptionChecked) {
+      toast.info("Checking your subscription...");
+      return false;
+    }
+
+    if (!hasPaidSubscription) {
+      toast.error("Please select a plan to generate or preview your PDF");
+      router.push("/select-plan");
+      return false;
+    }
+
+    return true;
+  };
+
 
   const handleGeneratePdf = async () => {
     if (!bookId) return;
+
+    if (!requirePaidSubscriptionForPdf()) return;
+
     // open modal to ask for cover image and author name
     setShowCoverModal(true);
   };
@@ -393,6 +411,12 @@ export default function BookBuilderPage() {
 
   const confirmGenerate = async () => {
     if (!bookId) return;
+
+    if (!requirePaidSubscriptionForPdf()) {
+      setShowCoverModal(false);
+      return;
+    }
+
     setShowCoverModal(false);
     setGenerating(true);
     try {
@@ -442,6 +466,9 @@ export default function BookBuilderPage() {
 
   const handleQuickGenerate = async () => {
     if (!bookId) return;
+
+    if (!requirePaidSubscriptionForPdf()) return;
+
     setQuickGenerating(true);
     try {
       const token = localStorage.getItem("token");
@@ -1379,7 +1406,10 @@ export default function BookBuilderPage() {
               {((book && (book as any).pdfUrl) || pdfUrl) && (
                 <div className="flex items-center gap-2">
                   <Button
-                    onClick={() => window.open((book && (book as any).pdfUrl) || pdfUrl, "_blank")}
+                    onClick={() => {
+                      if (!requirePaidSubscriptionForPdf()) return;
+                      window.open((book && (book as any).pdfUrl) || pdfUrl, "_blank");
+                    }}
                     className="bg-[#457B9D] text-white"
                   >
                     Preview PDF
