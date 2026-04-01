@@ -36,7 +36,12 @@ export type LandingPageContent = {
   features: {
     eyebrowText?: string;
     title?: string;
-    cards: Array<{ title: string; description: string; imageUrl: string; iconUrl?: string }>;
+    cards: Array<{
+      title: string;
+      description: string;
+      imageUrl: string;
+      iconUrl?: string;
+    }>;
   };
   learning: {
     eyebrowText?: string;
@@ -46,7 +51,7 @@ export type LandingPageContent = {
     videoUrl: string;
     videoCaption?: string;
     listHeading?: string;
-    presentationPoints?: string[];
+    buttonText?: string;
   };
   support: {
     eyebrowText?: string;
@@ -111,7 +116,9 @@ function assertBaseUrl() {
 
 export async function getLandingPagePublic(): Promise<LandingPageContent> {
   assertBaseUrl();
-  const res = await fetch(`${serverBaseUrl}/user/landing-page`, { cache: "no-store" });
+  const res = await fetch(`${serverBaseUrl}/user/landing-page`, {
+    cache: "no-store",
+  });
   const data: LandingPageResponse = await res.json();
   if (!res.ok) {
     throw new Error(data?.message || "Failed to fetch landing page");
@@ -120,7 +127,9 @@ export async function getLandingPagePublic(): Promise<LandingPageContent> {
   return data.response.data;
 }
 
-export async function getLandingPageAdmin(token: string): Promise<LandingPageContent> {
+export async function getLandingPageAdmin(
+  token: string,
+): Promise<LandingPageContent> {
   assertBaseUrl();
   const res = await fetch(`${serverBaseUrl}/admin/landing-page`, {
     headers: {
@@ -137,7 +146,10 @@ export async function getLandingPageAdmin(token: string): Promise<LandingPageCon
   return data.response.data;
 }
 
-export async function updateLandingPageAdmin(token: string, content: LandingPageContent): Promise<LandingPageContent> {
+export async function updateLandingPageAdmin(
+  token: string,
+  content: LandingPageContent,
+): Promise<LandingPageContent> {
   assertBaseUrl();
   const res = await fetch(`${serverBaseUrl}/admin/landing-page`, {
     method: "PUT",
@@ -158,7 +170,7 @@ export async function updateLandingPageAdmin(token: string, content: LandingPage
 export async function uploadLandingPageImageAdmin(
   token: string,
   imageDataUrl: string,
-  folder?: string
+  folder?: string,
 ): Promise<string> {
   assertBaseUrl();
   const res = await fetch(`${serverBaseUrl}/admin/landing-page/upload-image`, {
@@ -174,7 +186,8 @@ export async function uploadLandingPageImageAdmin(
     throw new Error(data?.message || "Failed to upload image");
   }
   const url = data?.response?.url;
-  if (typeof url !== "string" || !url) throw new Error("Invalid upload response");
+  if (typeof url !== "string" || !url)
+    throw new Error("Invalid upload response");
   return url;
 }
 
@@ -227,7 +240,8 @@ export function normalizeYouTubeEmbedUrl(input: string): string {
     return raw;
   }
 
-  const isYoutubeHost = host.endsWith("youtube.com") || host.endsWith("youtube-nocookie.com");
+  const isYoutubeHost =
+    host.endsWith("youtube.com") || host.endsWith("youtube-nocookie.com");
   if (!isYoutubeHost) return raw;
 
   // youtube.com/watch?v=VIDEO_ID
@@ -271,8 +285,14 @@ export function withCleanPlayerParams(url: string): string {
     // - iv_load_policy=3: hides video annotations
     // - playsinline=1: keeps playback inline on mobile
     u.searchParams.set("rel", u.searchParams.get("rel") ?? "0");
-    u.searchParams.set("modestbranding", u.searchParams.get("modestbranding") ?? "1");
-    u.searchParams.set("iv_load_policy", u.searchParams.get("iv_load_policy") ?? "3");
+    u.searchParams.set(
+      "modestbranding",
+      u.searchParams.get("modestbranding") ?? "1",
+    );
+    u.searchParams.set(
+      "iv_load_policy",
+      u.searchParams.get("iv_load_policy") ?? "3",
+    );
     u.searchParams.set("playsinline", u.searchParams.get("playsinline") ?? "1");
 
     // Keep controls so users can pause/seek.

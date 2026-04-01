@@ -1,69 +1,74 @@
-'use client'; 
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { handleSessionExpiry } from '@/utils/handleSessionExpiry';
+import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { handleSessionExpiry } from "@/utils/handleSessionExpiry";
 import {
   getEmailTemplateAdmin,
   upsertEmailTemplateAdmin,
-} from '@/api/emailTemplateApis';
+} from "@/api/emailTemplateApis";
 
 // 1. Dynamically import the new Quill library (Disables SSR to prevent crashes)
-const ReactQuill = dynamic(() => import('react-quill-new'), { 
+const ReactQuill = dynamic(() => import("react-quill-new"), {
   ssr: false,
-  loading: () => <p style={{ padding: '20px' }}>Loading editor...</p> 
+  loading: () => <p style={{ padding: "20px" }}>Loading editor...</p>,
 });
 
 // 2. Import the styling theme
-import 'react-quill-new/dist/quill.snow.css';
+import "react-quill-new/dist/quill.snow.css";
 
-const TEMPLATE_KEY = 'lead-newsletter';
+const TEMPLATE_KEY = "lead-newsletter";
 
-// 3. Define modules and formats OUTSIDE the component 
+// 3. Define modules and formats OUTSIDE the component
 // (This prevents the typing formatting bug you originally asked about)
 const modules = {
   toolbar: [
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-    ['bold', 'italic', 'underline', 'strike'],        
-    [{ 'color': [] }, { 'background': [] }],          
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    ['link'],
-    ['clean']                                         
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["link"],
+    ["clean"],
   ],
 };
 
 const formats = [
-  'header',
-  'bold', 'italic', 'underline', 'strike',
-  'color', 'background',
-  'list', 'bullet'
-  ,'link'
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "list",
+  "bullet",
+  "link",
 ];
 
 export default function EmailEditorPage() {
   const router = useRouter();
-  const [subject, setSubject] = useState('');
-  const [content, setContent] = useState('');
+  const [subject, setSubject] = useState("");
+  const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const previewHtml = useMemo(() => content || '<p style="color:#64748b">(Preview will appear here)</p>', [content]);
+  // preview removed per request
 
   const loadTemplate = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        toast.error('Missing admin token');
+        toast.error("Missing admin token");
         return;
       }
       const data = await getEmailTemplateAdmin(token, TEMPLATE_KEY);
-      setSubject(data.subject || '');
-      setContent(data.html || '');
+      setSubject(data.subject || "");
+      setContent(data.html || "");
     } catch (err: any) {
-      const message = err?.message || 'Failed to load email template';
+      const message = err?.message || "Failed to load email template";
       if (handleSessionExpiry(message, router, true)) return;
       toast.error(message);
     } finally {
@@ -74,9 +79,9 @@ export default function EmailEditorPage() {
   const saveTemplate = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        toast.error('Missing admin token');
+        toast.error("Missing admin token");
         return;
       }
       await upsertEmailTemplateAdmin(token, {
@@ -84,9 +89,9 @@ export default function EmailEditorPage() {
         subject,
         html: content,
       });
-      toast.success('Email template saved');
+      toast.success("Email template saved");
     } catch (err: any) {
-      const message = err?.message || 'Failed to save email template';
+      const message = err?.message || "Failed to save email template";
       if (handleSessionExpiry(message, router, true)) return;
       toast.error(message);
     } finally {
@@ -123,14 +128,18 @@ export default function EmailEditorPage() {
               strokeLinejoin="round"
               d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h8l4 4v12a2 2 0 01-2 2z"
             />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-8H7v8" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M17 21v-8H7v8"
+            />
             <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v4h8" />
           </svg>
           Save Changes
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className=" gap-6">
         <div className="w-full bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden">
           <div className="p-6 sm:p-8 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -161,24 +170,14 @@ export default function EmailEditorPage() {
               />
             </div>
             <p className="text-xs text-gray-500">
-              You can use placeholders: <span className="font-mono">{`{{firstName}}`}</span>,{' '}
-              <span className="font-mono">{`{{fullName}}`}</span>,{' '}
+              You can use placeholders:{" "}
+              <span className="font-mono">{`{{fullName}}`}</span>,{" "}
               <span className="font-mono">{`{{email}}`}</span>
             </p>
           </div>
         </div>
 
-        <div className="w-full bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden">
-          <div className="p-6 sm:p-8">
-            <h2 className="text-sm font-semibold text-gray-600 mb-3">Preview</h2>
-            <div className="mb-3 text-sm text-gray-700">
-              <span className="font-semibold">Subject:</span> {subject || '(no subject)'}
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4 overflow-auto max-h-[70vh]">
-              <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
-            </div>
-          </div>
-        </div>
+        {/* Preview removed */}
       </div>
     </main>
   );

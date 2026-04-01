@@ -1,60 +1,40 @@
 "use client";
 
-import React, { useState } from 'react';
-import type { LandingPageContent } from '@/api/landingpageApis';
-import { normalizeYouTubeEmbedUrl, withAutoplay } from '@/api/landingpageApis';
-import { youTubeThumbnailFromEmbedUrl } from './utils';
+import React, { useState } from "react";
+import type { LandingPageContent } from "@/api/landingpageApis";
+import { normalizeYouTubeEmbedUrl, withAutoplay } from "@/api/landingpageApis";
+import { youTubeThumbnailFromEmbedUrl } from "./utils";
 
 type Props = {
   content: LandingPageContent;
+  onDownloadStarterKit?: () => void;
 };
 
-export function FullOverviewSection({ content }: Props) {
+export function FullOverviewSection({ content, onDownloadStarterKit }: Props) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const embedUrl = normalizeYouTubeEmbedUrl(content.learning.videoUrl || '');
+  const embedUrl = normalizeYouTubeEmbedUrl(content.learning.videoUrl || "");
   const iframeSrc = withAutoplay(embedUrl);
   const thumbnailUrl =
     content.learning.imageUrl ||
     youTubeThumbnailFromEmbedUrl(embedUrl) ||
-    '/YOUR_DESK_THUMBNAIL.jpg';
-  const presentationPoints = (content.learning.presentationPoints || [])
-    .filter(Boolean)
-    .slice(0, 12);
-  const fallbackFromDescription = (
-    content.learning.description
-      ? content.learning.description
-          .split('\n')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : []
-  ).slice(0, 12);
-  const points = presentationPoints.length
-    ? presentationPoints
-    : fallbackFromDescription.length
-      ? fallbackFromDescription
-      : [
-          'The origin story of Story Gems and why it was created',
-          'How our guided process works for all skill levels',
-          "What you'll create and why it matters for future generations",
-          'The technology behind story preservation and book creation',
-        ];
+    "/YOUR_DESK_THUMBNAIL.jpg";
 
   return (
     <section className="w-full py-20 px-6 bg-[#f4f8fb] font-sans flex flex-col items-center">
       {/* Header Section */}
       <div className="text-center mb-10 max-w-3xl mx-auto">
         <span className="block text-[#5b8cc2] text-xs font-bold tracking-widest uppercase mb-3">
-          {content.learning.eyebrowText || 'Full Overview · 17 Min'}
+          {content.learning.eyebrowText || "Full Overview · 17 Min"}
         </span>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2 leading-tight">
           {content.learning.title ||
-            'Learn the Who, What, Why, and How Behind Story Gems'}
+            "Learn the Who, What, Why, and How Behind Story Gems"}
         </h2>
       </div>
 
       {/* Video Container */}
       <div
-        className="relative w-full max-w-5xl aspect-[16/9] rounded-3xl overflow-hidden shadow-2xl bg-cover bg-center mb-8 flex flex-col items-center justify-center group cursor-pointer"
+        className="relative w-full max-w-5xl aspect-video rounded-3xl overflow-hidden shadow-2xl bg-cover bg-center mb-8 flex flex-col items-center justify-center group cursor-pointer"
         onClick={() => {
           if (!embedUrl) return;
           setIsPlaying(true);
@@ -67,7 +47,7 @@ export function FullOverviewSection({ content }: Props) {
             src={iframeSrc}
             title={
               content.learning.videoCaption ||
-              'Full Story Gems Overview Presentation (17 min)'
+              "Full Story Gems Overview Presentation (17 min)"
             }
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
@@ -91,43 +71,37 @@ export function FullOverviewSection({ content }: Props) {
 
               <p className="text-white/90 text-sm font-medium tracking-wide">
                 {content.learning.videoCaption ||
-                  'Full Story Gems Overview Presentation (17 min)'}
+                  "Full Story Gems Overview Presentation (17 min)"}
               </p>
             </div>
           </>
         )}
       </div>
 
-      {/* Presentation Details Card */}
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 p-8 md:p-10">
-        <h3 className="text-[#5b8cc2] text-xs font-bold tracking-widest uppercase mb-6">
-          {content.learning.listHeading || 'In This Presentation'}
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-          {points.map((point, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <svg
-                  className="w-5 h-5 text-[#5b8cc2]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <span className="text-gray-500 text-sm md:text-base leading-snug">
-                {point}
-              </span>
-            </div>
-          ))}
-        </div>
+      {/* CTA under video */}
+      <div className="w-full max-w-5xl flex items-center justify-center mb-10">
+        <button
+          type="button"
+          onClick={onDownloadStarterKit}
+          className="inline-flex items-center gap-3 bg-white text-black font-medium text-sm sm:text-base px-6 py-3.5 rounded-full hover:bg-gray-100 transition-colors duration-200 shadow-sm border border-gray-200"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          {content.learning.buttonText || "Download the FREE Story Starter Kit"}
+        </button>
       </div>
     </section>
   );
