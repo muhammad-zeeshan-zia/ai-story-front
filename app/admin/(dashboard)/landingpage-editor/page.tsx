@@ -507,7 +507,7 @@ const HeroSectionEditor = ({
     <div className="w-full bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden">
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
-        <h2 className="text-lg font-bold text-[#1e293b]">2. Hero Section</h2>
+        <h2 className="text-lg font-bold text-[#1e293b]">1. Hero Section</h2>
       </div>
 
       {/* Card Body / Form */}
@@ -662,7 +662,7 @@ const StartWithOneMemoryEditor = ({
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
         <h2 className="text-lg font-bold text-[#1e293b]">
-          3. "Start with One Memory" Section
+          2. "Start with One Memory" Section
         </h2>
       </div>
 
@@ -751,7 +751,7 @@ const StartWithOneMemoryEditor = ({
                         };
                       });
                     }}
-                    className="flex-grow px-4 py-2.5 bg-white rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-[#4b92d4] focus:ring-1 focus:ring-[#4b92d4] transition-colors"
+                    className="grow px-4 py-2.5 bg-white rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-[#4b92d4] focus:ring-1 focus:ring-[#4b92d4] transition-colors"
                   />
                   <button
                     type="button"
@@ -771,7 +771,7 @@ const StartWithOneMemoryEditor = ({
                         };
                       });
                     }}
-                    className="flex-shrink-0 text-red-400 hover:text-red-500 transition-colors p-1"
+                    className="shrink-0 text-red-400 hover:text-red-500 transition-colors p-1"
                     aria-label="Remove checklist item"
                   >
                     <svg
@@ -959,7 +959,7 @@ const WatchMemoryEditor = ({
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
         <h2 className="text-lg font-bold text-[#1e293b]">
-          4. "Watch Memory Become Story" Section
+          3. "Watch Memory Become Story" Section
         </h2>
       </div>
 
@@ -1140,7 +1140,7 @@ const FeaturesSectionEditor = ({
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
         <h2 className="text-lg font-bold text-[#1e293b]">
-          5. Features Section
+          4. Features Section
         </h2>
       </div>
 
@@ -1307,7 +1307,7 @@ const LearningSectionEditor = ({
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
         <h2 className="text-lg font-bold text-[#1e293b]">
-          6. Learning Section
+          5. Learning Section
         </h2>
       </div>
 
@@ -1494,7 +1494,7 @@ const SupportSectionEditor = ({
     <div className="w-full bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden mt-8 font-sans">
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
-        <h2 className="text-lg font-bold text-[#1e293b]">7. Support Section</h2>
+        <h2 className="text-lg font-bold text-[#1e293b]">6. Support Section</h2>
       </div>
 
       {/* Card Body / Form */}
@@ -1748,7 +1748,7 @@ const PricingSectionEditor = ({
     <div className="w-full bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden mt-8 font-sans">
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
-        <h2 className="text-lg font-bold text-[#1e293b]">8. Pricing Section</h2>
+        <h2 className="text-lg font-bold text-[#1e293b]">7. Pricing Section</h2>
       </div>
 
       {/* Card Body / Form */}
@@ -2169,7 +2169,7 @@ const PricingSectionEditor = ({
                             };
                           });
                         }}
-                        className="flex-grow px-4 py-2.5 bg-white rounded-lg border border-gray-200 text-sm text-gray-500 focus:outline-none focus:border-[#4b92d4] focus:ring-1 focus:ring-[#4b92d4] transition-colors"
+                        className="grow px-4 py-2.5 bg-white rounded-lg border border-gray-200 text-sm text-gray-500 focus:outline-none focus:border-[#4b92d4] focus:ring-1 focus:ring-[#4b92d4] transition-colors"
                       />
                       {/* Delete (Trash) Button */}
                       <button
@@ -2196,7 +2196,7 @@ const PricingSectionEditor = ({
                             };
                           });
                         }}
-                        className="flex-shrink-0 text-red-400 hover:text-red-500 transition-colors p-1"
+                        className="shrink-0 text-red-400 hover:text-red-500 transition-colors p-1"
                         aria-label="Remove feature"
                       >
                         <svg
@@ -2277,7 +2277,7 @@ const GuaranteeSectionEditor = ({
       {/* Card Header */}
       <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
         <h2 className="text-lg font-bold text-[#1e293b]">
-          9. Guarantee Section
+          8. Guarantee Section
         </h2>
       </div>
 
@@ -2375,7 +2375,7 @@ const GuaranteeSectionEditor = ({
                       };
                     });
                   }}
-                  className="flex-grow px-4 py-2.5 bg-white rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-[#4b92d4] focus:ring-1 focus:ring-[#4b92d4] transition-colors"
+                  className="grow px-4 py-2.5 bg-white rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-[#4b92d4] focus:ring-1 focus:ring-[#4b92d4] transition-colors"
                 />
                 <button
                   type="button"
@@ -2390,7 +2390,7 @@ const GuaranteeSectionEditor = ({
                       };
                     });
                   }}
-                  className="flex-shrink-0 text-red-400 hover:text-red-500 transition-colors p-1"
+                  className="shrink-0 text-red-400 hover:text-red-500 transition-colors p-1"
                   aria-label="Remove pill"
                 >
                   <svg
@@ -2489,7 +2489,7 @@ const FinalCTASectionEditor = ({
         {/* Card Header */}
         <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
           <h2 className="text-lg font-bold text-[#1e293b]">
-            10. Final CTA Section
+            9. Final CTA Section
           </h2>
         </div>
 

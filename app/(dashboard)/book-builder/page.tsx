@@ -1,20 +1,26 @@
 "use client";
 import { luluOptions, generatePodPackageId } from "@/utils/luluConfig";
 
-
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PrivateRoute } from "@/utils/RouteProtection";
 import { Button } from "@/components/ui/Button";
-import { getBook, reorderBook, removeStoryFromBook, generateBookPdf, updateBookTitle, sendToLulu, calculatePrintCost } from "@/utils/bookDraft";
+import {
+  getBook,
+  reorderBook,
+  removeStoryFromBook,
+  generateBookPdf,
+  updateBookTitle,
+  sendToLulu,
+  calculatePrintCost,
+} from "@/utils/bookDraft";
 import { createCartItem } from "@/utils/cartClient";
 import { useRouter } from "next/navigation";
-import Link from "next/link"
+import Link from "next/link";
 import { handleSessionExpiry } from "@/utils/handleSessionExpiry";
+import TrialBanner from "@/components/ui/TrialBanner";
 
 const serverBaseUrl = process.env.NEXT_PUBLIC_BACKEND_SERVER_URL;
-
-
 
 import {
   DndContext,
@@ -31,7 +37,6 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
 
 type StoryType = {
   _id: string;
@@ -64,21 +69,27 @@ function SortableRow({
   onRemove: (storyId: string) => void;
   onMove?: (storyId: string, direction: "up" | "down") => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: story._id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: story._id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
-
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center justify-between gap-3 p-4 rounded-xl border bg-white ${isDragging ? "opacity-70" : ""
-        }`}
+      className={`flex items-center justify-between gap-3 p-4 rounded-xl border bg-white ${
+        isDragging ? "opacity-70" : ""
+      }`}
     >
       <div className="flex items-center gap-3">
         <div
@@ -91,7 +102,9 @@ function SortableRow({
         </div>
 
         <div>
-          <div className="font-semibold text-slate-800">{story.story_title}</div>
+          <div className="font-semibold text-slate-800">
+            {story.story_title}
+          </div>
           <div className="text-xs text-slate-500">
             {story.genre} • {story.read_time}
           </div>
@@ -251,7 +264,6 @@ export default function BookBuilderPage() {
     }
   };
 
-
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [quickGenerating, setQuickGenerating] = useState(false);
@@ -260,6 +272,8 @@ export default function BookBuilderPage() {
   const router = useRouter();
   const [hasPaidSubscription, setHasPaidSubscription] = useState(false);
   const [subscriptionChecked, setSubscriptionChecked] = useState(false);
+  const [trialActive, setTrialActive] = useState(false);
+  const [trialEndDate, setTrialEndDate] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<any>(null);
   const [validationId, setValidationId] = useState<string | null>(null);
@@ -268,11 +282,21 @@ export default function BookBuilderPage() {
   const [quantity, setQuantity] = useState<number>(1);
   const [shippingLevel, setShippingLevel] = useState("MAIL");
   const [shippingOption, setShippingOption] = useState("MAIL");
-  const [trimSize, setTrimSize] = useState<string>(luluOptions.defaults.trimSize || "0744X0968");
-  const [binding, setBinding] = useState<string>(luluOptions.bindings[1].code as string);
-  const [interiorColor, setInteriorColor] = useState<string>(luluOptions.interiorColors[3].code as string);
-  const [paperType, setPaperType] = useState<string>(luluOptions.paperTypes[1].code as string);
-  const [coverFinish, setCoverFinish] = useState<string>(luluOptions.coverFinishes[0].code as string);
+  const [trimSize, setTrimSize] = useState<string>(
+    luluOptions.defaults.trimSize || "0744X0968",
+  );
+  const [binding, setBinding] = useState<string>(
+    luluOptions.bindings[1].code as string,
+  );
+  const [interiorColor, setInteriorColor] = useState<string>(
+    luluOptions.interiorColors[3].code as string,
+  );
+  const [paperType, setPaperType] = useState<string>(
+    luluOptions.paperTypes[1].code as string,
+  );
+  const [coverFinish, setCoverFinish] = useState<string>(
+    luluOptions.coverFinishes[0].code as string,
+  );
   const [podPackageId, setPodPackageId] = useState<string>(() =>
     generatePodPackageId({
       size: luluOptions.defaults.trimSize as any,
@@ -280,7 +304,7 @@ export default function BookBuilderPage() {
       binding: luluOptions.bindings[1].code as any,
       paper: luluOptions.paperTypes[1].code as any,
       finish: luluOptions.coverFinishes[0].code as any,
-    })
+    }),
   );
 
   useEffect(() => {
@@ -291,7 +315,7 @@ export default function BookBuilderPage() {
         binding: binding as any,
         paper: paperType as any,
         finish: coverFinish as any,
-      })
+      }),
     );
   }, [trimSize, binding, interiorColor, paperType, coverFinish]);
 
@@ -309,13 +333,16 @@ export default function BookBuilderPage() {
           return;
         }
 
-        const response = await fetch(`${serverBaseUrl}/user/plan/subscription`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        const response = await fetch(
+          `${serverBaseUrl}/user/plan/subscription`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         let data: any = null;
         try {
@@ -348,6 +375,43 @@ export default function BookBuilderPage() {
     };
 
     fetchSubscription();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchTrial = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token || !serverBaseUrl) return;
+
+        const response = await fetch(`${serverBaseUrl}/user/plan/trial`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        if (cancelled) return;
+
+        if (!response.ok) {
+          if (handleSessionExpiry(data?.message, router)) return;
+          return;
+        }
+
+        setTrialActive(Boolean(data?.response?.trialActive));
+        setTrialEndDate(data?.response?.trialEndDate ?? null);
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchTrial();
     return () => {
       cancelled = true;
     };
@@ -389,7 +453,6 @@ export default function BookBuilderPage() {
 
     return true;
   };
-
 
   const handleGeneratePdf = async () => {
     if (!bookId) return;
@@ -440,12 +503,20 @@ export default function BookBuilderPage() {
         bookId,
         token,
         podPackageId,
-        customCoverWidth && customCoverWidth.trim() !== "" ? customCoverWidth.trim() : undefined,
-        customCoverHeight && customCoverHeight.trim() !== "" ? customCoverHeight.trim() : undefined,
-        customCoverUnit && customCoverUnit.trim() !== "" ? customCoverUnit.trim() : undefined,
+        customCoverWidth && customCoverWidth.trim() !== ""
+          ? customCoverWidth.trim()
+          : undefined,
+        customCoverHeight && customCoverHeight.trim() !== ""
+          ? customCoverHeight.trim()
+          : undefined,
+        customCoverUnit && customCoverUnit.trim() !== ""
+          ? customCoverUnit.trim()
+          : undefined,
         coverDataUrl,
-        coverAuthor && coverAuthor.trim() !== "" ? `By ${coverAuthor.trim()}` : undefined,
-        audioDataUrl
+        coverAuthor && coverAuthor.trim() !== ""
+          ? `By ${coverAuthor.trim()}`
+          : undefined,
+        audioDataUrl,
       );
       setPdfUrl(url);
       // refresh book state so `book.pdfUrl` reflects the newly generated PDF
@@ -494,8 +565,6 @@ export default function BookBuilderPage() {
     setAudioFileName(null);
   };
 
-
-
   const handleAddToCart = async () => {
     if (!bookId) return;
     setAddingToCart(true);
@@ -513,14 +582,22 @@ export default function BookBuilderPage() {
         shippingAddress.phone_number,
       ];
       if (requiredFields.some((f) => !f || String(f).trim() === "")) {
-        toast.error("Please fill required shipping details before adding to cart");
+        toast.error(
+          "Please fill required shipping details before adding to cart",
+        );
         return;
       }
 
       // validate phone format: <country code> <number> e.g. +92 6868, 1 787979
       const phonePatternCart = /^\+?\d{1,3} \d{4,15}$/;
-      if (!phonePatternCart.test(String(shippingAddress.phone_number || "").trim())) {
-        toast.error("Phone number must be in format: +1 6868... or 1 787979... (country code, space, number)");
+      if (
+        !phonePatternCart.test(
+          String(shippingAddress.phone_number || "").trim(),
+        )
+      ) {
+        toast.error(
+          "Phone number must be in format: +1 6868... or 1 787979... (country code, space, number)",
+        );
         return;
       }
       console.log("Book before PDF generation:", book);
@@ -534,7 +611,8 @@ export default function BookBuilderPage() {
       console.log("Book after PDF generation:", book);
 
       const interiorSource = (book as any)?.pdfUrl || pdfUrl;
-      if (!interiorSource) throw new Error("No interior PDF available to validate");
+      if (!interiorSource)
+        throw new Error("No interior PDF available to validate");
 
       const lib = await import("@/utils/bookDraft");
 
@@ -558,15 +636,30 @@ export default function BookBuilderPage() {
 
       // console.log("Book:", book);
 
-      const interiorResp = await lib.validateInterior(bookId, token, interiorSource, podPackageId);
+      const interiorResp = await lib.validateInterior(
+        bookId,
+        token,
+        interiorSource,
+        podPackageId,
+      );
       let interiorFinal = interiorResp;
 
-      const terminalStates = ["VALIDATED", "COMPLETED", "ERROR", "FAILED", "REJECTED"];
+      const terminalStates = [
+        "VALIDATED",
+        "COMPLETED",
+        "ERROR",
+        "FAILED",
+        "REJECTED",
+      ];
 
       if (interiorResp && interiorResp.id) {
         const max = 10; // Increased max attempts to account for longer validation times
         for (let i = 0; i < max; i++) {
-          const s = await lib.getValidationStatus(bookId, token, String(interiorResp.id));
+          const s = await lib.getValidationStatus(
+            bookId,
+            token,
+            String(interiorResp.id),
+          );
           interiorFinal = s;
 
           if (s?.errors && Object.keys(s.errors).length > 0) break;
@@ -578,8 +671,13 @@ export default function BookBuilderPage() {
           await new Promise((r) => setTimeout(r, 2000));
         }
       }
-      if (interiorFinal?.errors && Object.keys(interiorFinal.errors).length > 0) {
-        throw new Error("Interior validation failed: " + JSON.stringify(interiorFinal.errors));
+      if (
+        interiorFinal?.errors &&
+        Object.keys(interiorFinal.errors).length > 0
+      ) {
+        throw new Error(
+          "Interior validation failed: " + JSON.stringify(interiorFinal.errors),
+        );
       }
       // validate cover (ensure cover PDF exists first)
       // const coverSource = (book as any)?.coverPdfUrl || coverUrl;
@@ -591,14 +689,24 @@ export default function BookBuilderPage() {
       // }
 
       const finalCoverSource = (book as any)?.coverPdfUrl || coverUrl;
-      if (!finalCoverSource) throw new Error("No cover PDF available to validate");
+      if (!finalCoverSource)
+        throw new Error("No cover PDF available to validate");
 
       // derive interior page count from validation result or fallback
-      const interiorPageCount = Number(interiorFinal?.page_count || interiorFinal?.pages || pageCount || 0);
+      const interiorPageCount = Number(
+        interiorFinal?.page_count || interiorFinal?.pages || pageCount || 0,
+      );
       if (!interiorPageCount || interiorPageCount <= 0) {
-        throw new Error("Unable to determine interior page count for cover validation");
+        throw new Error(
+          "Unable to determine interior page count for cover validation",
+        );
       }
-      console.log("cobersource:", finalCoverSource, "interiorPageCount:", interiorPageCount);
+      console.log(
+        "cobersource:",
+        finalCoverSource,
+        "interiorPageCount:",
+        interiorPageCount,
+      );
       const coverResp = await lib.validateCover(bookId, token, {
         source_url: finalCoverSource,
         pod_package_id: podPackageId,
@@ -608,19 +716,24 @@ export default function BookBuilderPage() {
       if (coverResp && coverResp.id) {
         const max = 12;
         for (let i = 0; i < max; i++) {
-          const s = await lib.getCoverValidationStatus(bookId, token, String(coverResp.id));
+          const s = await lib.getCoverValidationStatus(
+            bookId,
+            token,
+            String(coverResp.id),
+          );
           coverFinal = s;
           const st = (s?.status || s?.state || "").toString().toUpperCase();
           if (s?.errors && Object.keys(s.errors).length > 0) break;
-          if (st && !["VALIDATING", "NORMALIZING", "PROCESSING"].includes(st)) break;
+          if (st && !["VALIDATING", "NORMALIZING", "PROCESSING"].includes(st))
+            break;
           await new Promise((r) => setTimeout(r, 2000));
         }
       }
       if (coverFinal?.errors && Object.keys(coverFinal.errors).length > 0) {
         throw new Error(
           "Cover validation failed: " +
-          JSON.stringify(coverFinal.errors) +
-          ". Please choose the correct binding type and generate the book again."
+            JSON.stringify(coverFinal.errors) +
+            ". Please choose the correct binding type and generate the book again.",
         );
       }
 
@@ -646,7 +759,6 @@ export default function BookBuilderPage() {
 
       const cost = await calculatePrintCost(bookId, token, costPayload);
 
-
       // compute total
       // const totalTax = Number(cost.total_tax || 0);
       // const totalIncl = Number(cost.total_cost_incl_tax || 0);
@@ -655,13 +767,17 @@ export default function BookBuilderPage() {
       // const discount = Number(cost.total_discount_amount || 0);
       // const totalPrice = totalTax + totalIncl + fulfillmentTax + shippingIncl - discount;
 
-
       const salesTax = Number(cost.total_tax || 0);
-      const fulfillment_fee = Number(cost.fulfillment_cost?.total_cost_excl_tax || 0);
-      const shipping_cost = Number(cost.shipping_cost?.total_cost_excl_tax || 0);
+      const fulfillment_fee = Number(
+        cost.fulfillment_cost?.total_cost_excl_tax || 0,
+      );
+      const shipping_cost = Number(
+        cost.shipping_cost?.total_cost_excl_tax || 0,
+      );
       const sub_total = Number(cost.line_item_costs[0]?.unit_tier_cost || 0);
       const discount = Number(cost.total_discount_amount || 0);
-      const totalPrice = salesTax + sub_total + fulfillment_fee + shipping_cost - discount;
+      const totalPrice =
+        salesTax + sub_total + fulfillment_fee + shipping_cost - discount;
       const finalprice = cost.total_cost_incl_tax;
       const cartPayload = {
         title: book?.title || "",
@@ -708,13 +824,35 @@ export default function BookBuilderPage() {
 
       // require full shipping address and shipping option with clear messages
       const missingShipping: string[] = [];
-      if (!shippingAddress.city || String(shippingAddress.city).trim() === "") missingShipping.push("City");
-      if (!shippingAddress.country_code || String(shippingAddress.country_code).trim() === "") missingShipping.push("Country Code");
-      if (!shippingAddress.postcode || String(shippingAddress.postcode).trim() === "") missingShipping.push("Postcode");
-      if (!shippingAddress.state_code || String(shippingAddress.state_code).trim() === "") missingShipping.push("State Code");
-      if (!shippingAddress.street1 || String(shippingAddress.street1).trim() === "") missingShipping.push("Street Address");
-      if (!shippingAddress.phone_number || String(shippingAddress.phone_number).trim() === "") missingShipping.push("Phone Number");
-      if (!shippingOption || String(shippingOption).trim() === "") missingShipping.push("Shipping Option");
+      if (!shippingAddress.city || String(shippingAddress.city).trim() === "")
+        missingShipping.push("City");
+      if (
+        !shippingAddress.country_code ||
+        String(shippingAddress.country_code).trim() === ""
+      )
+        missingShipping.push("Country Code");
+      if (
+        !shippingAddress.postcode ||
+        String(shippingAddress.postcode).trim() === ""
+      )
+        missingShipping.push("Postcode");
+      if (
+        !shippingAddress.state_code ||
+        String(shippingAddress.state_code).trim() === ""
+      )
+        missingShipping.push("State Code");
+      if (
+        !shippingAddress.street1 ||
+        String(shippingAddress.street1).trim() === ""
+      )
+        missingShipping.push("Street Address");
+      if (
+        !shippingAddress.phone_number ||
+        String(shippingAddress.phone_number).trim() === ""
+      )
+        missingShipping.push("Phone Number");
+      if (!shippingOption || String(shippingOption).trim() === "")
+        missingShipping.push("Shipping Option");
 
       if (missingShipping.length > 0) {
         toast.error(`Missing shipping fields: ${missingShipping.join(", ")}`);
@@ -724,7 +862,9 @@ export default function BookBuilderPage() {
       // validate phone format: <country code> <number> e.g. +92 6868, 1 787979
       const phonePattern = /^\+?\d{1,3} \d{4,15}$/;
       if (!phonePattern.test(String(shippingAddress.phone_number).trim())) {
-        toast.error("Phone number must be in format: +92 6868 or 1 787979 (country code, space, number)");
+        toast.error(
+          "Phone number must be in format: +92 6868 or 1 787979 (country code, space, number)",
+        );
         return;
       }
 
@@ -774,17 +914,26 @@ export default function BookBuilderPage() {
       }
 
       const interiorSource = (book as any)?.pdfUrl || pdfUrl;
-      if (!interiorSource) throw new Error("No interior PDF available to validate");
+      if (!interiorSource)
+        throw new Error("No interior PDF available to validate");
 
       const lib = await import("@/utils/bookDraft");
 
       // Start interior validation
-      const interiorResp = await lib.validateInterior(bookId, token, interiorSource);
+      const interiorResp = await lib.validateInterior(
+        bookId,
+        token,
+        interiorSource,
+      );
       setValidationResult(interiorResp);
-      if (interiorResp && interiorResp.id) setValidationId(String(interiorResp.id));
+      if (interiorResp && interiorResp.id)
+        setValidationId(String(interiorResp.id));
 
       // Poll interior status until not in-progress or until errors
-      const poll = async (fn: (b: string, t: string, id: string) => Promise<any>, id: string) => {
+      const poll = async (
+        fn: (b: string, t: string, id: string) => Promise<any>,
+        id: string,
+      ) => {
         let last = null;
         const max = 12;
         for (let i = 0; i < max; i++) {
@@ -792,16 +941,25 @@ export default function BookBuilderPage() {
           last = s;
           const st = (s?.status || s?.state || "").toString().toUpperCase();
           if (s?.errors && Object.keys(s.errors).length > 0) return s;
-          if (st && !["VALIDATING", "NORMALIZING", "PROCESSING"].includes(st)) return s;
+          if (st && !["VALIDATING", "NORMALIZING", "PROCESSING"].includes(st))
+            return s;
           await new Promise((r) => setTimeout(r, 2000));
         }
         return last;
       };
 
-      const finalInterior = await poll(lib.getValidationStatus, String(interiorResp.id));
+      const finalInterior = await poll(
+        lib.getValidationStatus,
+        String(interiorResp.id),
+      );
       setValidationResult(finalInterior);
-      if (finalInterior?.errors && Object.keys(finalInterior.errors).length > 0) {
-        throw new Error("Interior validation failed: " + JSON.stringify(finalInterior.errors));
+      if (
+        finalInterior?.errors &&
+        Object.keys(finalInterior.errors).length > 0
+      ) {
+        throw new Error(
+          "Interior validation failed: " + JSON.stringify(finalInterior.errors),
+        );
       }
 
       // cover validation removed (only interior validation performed)
@@ -817,8 +975,16 @@ export default function BookBuilderPage() {
   useEffect(() => {
     if (!validationResult) return;
     try {
-      const msg = validationResult.message || validationResult.status || validationResult.state || (validationResult.errors ? JSON.stringify(validationResult.errors) : JSON.stringify(validationResult));
-      const hasErrors = validationResult.errors && Object.keys(validationResult.errors).length > 0;
+      const msg =
+        validationResult.message ||
+        validationResult.status ||
+        validationResult.state ||
+        (validationResult.errors
+          ? JSON.stringify(validationResult.errors)
+          : JSON.stringify(validationResult));
+      const hasErrors =
+        validationResult.errors &&
+        Object.keys(validationResult.errors).length > 0;
       if (hasErrors) toast.error(msg);
       else toast.success(msg);
     } catch (e: any) {
@@ -831,47 +997,97 @@ export default function BookBuilderPage() {
   const computedTotal = useMemo(() => {
     if (!costEstimate) return null;
     const salesTax = Number(costEstimate.total_tax || 0);
-    const fulfillment_fee = Number(costEstimate.fulfillment_cost?.total_cost_excl_tax || 0);
-    const shipping_cost = Number(costEstimate.shipping_cost?.total_cost_excl_tax || 0);
-    const sub_total = Number(costEstimate.line_item_costs[0]?.unit_tier_cost || 0);
+    const fulfillment_fee = Number(
+      costEstimate.fulfillment_cost?.total_cost_excl_tax || 0,
+    );
+    const shipping_cost = Number(
+      costEstimate.shipping_cost?.total_cost_excl_tax || 0,
+    );
+    const sub_total = Number(
+      costEstimate.line_item_costs[0]?.unit_tier_cost || 0,
+    );
     const discount = Number(costEstimate.total_discount_amount || 0);
-    console.log("Cost breakdown:", { salesTax, fulfillment_fee, shipping_cost, sub_total, discount });
+    console.log("Cost breakdown:", {
+      salesTax,
+      fulfillment_fee,
+      shipping_cost,
+      sub_total,
+      discount,
+    });
     return salesTax + sub_total + fulfillment_fee + shipping_cost - discount;
   }, [costEstimate]);
 
   return (
     <PrivateRoute>
       <div className="max-w-4xl mx-auto px-4 py-10">
+        {!hasPaidSubscription && trialActive && (
+          <div className="mb-4">
+            <TrialBanner trialEndDate={trialEndDate} />
+          </div>
+        )}
         {showCoverModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl relative overflow-hidden border p-6">
-              <h3 className="text-lg font-semibold mb-1">Title Page Cover — Generate PDF</h3>
-              <p className="text-sm text-slate-500 mb-4">Upload an image and optional author name to appear on the book's title page.</p>
+              <h3 className="text-lg font-semibold mb-1">
+                Title Page Cover — Generate PDF
+              </h3>
+              <p className="text-sm text-slate-500 mb-4">
+                Upload an image and optional author name to appear on the book's
+                title page.
+              </p>
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="cover-upload" className="block text-sm text-slate-600 mb-2">Title-page cover image (optional)</label>
+                  <label
+                    htmlFor="cover-upload"
+                    className="block text-sm text-slate-600 mb-2"
+                  >
+                    Title-page cover image (optional)
+                  </label>
 
                   <div
-                    onClick={() => document.getElementById('cover-upload')?.click()}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('cover-upload')?.click(); } }}
+                    onClick={() =>
+                      document.getElementById("cover-upload")?.click()
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        document.getElementById("cover-upload")?.click();
+                      }
+                    }}
                     role="button"
                     tabIndex={0}
                     className="mt-2 flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-slate-400 bg-slate-50"
                   >
                     {!coverPreview && (
                       <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-10 w-10 text-slate-400"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
                           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.414 6L13 2.586A2 2 0 0011.586 2H4z" />
                         </svg>
-                        <div className="text-sm text-slate-600">Click or drag image to upload</div>
-                        <div className="text-xs text-slate-400">PNG, JPG, GIF — up to 5MB</div>
+                        <div className="text-sm text-slate-600">
+                          Click or drag image to upload
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          PNG, JPG, GIF — up to 5MB
+                        </div>
                       </>
                     )}
 
                     {coverPreview && (
                       <div className="w-full flex flex-col items-center justify-center">
-                        <img src={coverPreview} alt="Cover preview" className="max-h-44 object-contain rounded" />
-                        <div className="text-xs text-slate-500 mt-2">Preview — this image will appear on the book title page</div>
+                        <img
+                          src={coverPreview}
+                          alt="Cover preview"
+                          className="max-h-44 object-contain rounded"
+                        />
+                        <div className="text-xs text-slate-500 mt-2">
+                          Preview — this image will appear on the book title
+                          page
+                        </div>
                       </div>
                     )}
 
@@ -883,8 +1099,8 @@ export default function BookBuilderPage() {
                         const f = e.target.files && e.target.files[0];
                         if (!f) return;
                         if (f.size > 5 * 1024 * 1024) {
-                          toast.error('File too large (max 5MB)');
-                          e.currentTarget.value = '';
+                          toast.error("File too large (max 5MB)");
+                          e.currentTarget.value = "";
                           return;
                         }
                         setCoverFile(f);
@@ -892,7 +1108,7 @@ export default function BookBuilderPage() {
                           const data = await readFileAsDataUrl(f);
                           setCoverPreview(data);
                         } catch (err) {
-                          toast.error('Failed to read file');
+                          toast.error("Failed to read file");
                         }
                       }}
                       className="hidden"
@@ -906,27 +1122,42 @@ export default function BookBuilderPage() {
                         onClick={() => {
                           setCoverFile(null);
                           setCoverPreview(null);
-                          const el = document.getElementById('cover-upload') as HTMLInputElement | null;
-                          if (el) el.value = '';
+                          const el = document.getElementById(
+                            "cover-upload",
+                          ) as HTMLInputElement | null;
+                          if (el) el.value = "";
                         }}
                         className="px-3 py-1 border rounded bg-white text-slate-700"
                       >
                         Remove
                       </button>
-
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="text-sm text-slate-600">Author name (optional)</label>
-                  <input value={coverAuthor} onChange={(e) => setCoverAuthor(e.target.value)} className="w-full p-2 border rounded mt-2" />
-                  <div className="text-xs text-slate-400 mt-1">Will appear on the title page beneath the cover image. Leave blank to use default attribution.</div>
+                  <label className="text-sm text-slate-600">
+                    Author name (optional)
+                  </label>
+                  <input
+                    value={coverAuthor}
+                    onChange={(e) => setCoverAuthor(e.target.value)}
+                    className="w-full p-2 border rounded mt-2"
+                  />
+                  <div className="text-xs text-slate-400 mt-1">
+                    Will appear on the title page beneath the cover image. Leave
+                    blank to use default attribution.
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-sm text-slate-600">Audio file (optional)</label>
-                  <div className="text-xs text-slate-400 mt-1 mb-2">Attach an audio file and a QR code will be added to the book so readers can scan and listen.</div>
+                  <label className="text-sm text-slate-600">
+                    Audio file (optional)
+                  </label>
+                  <div className="text-xs text-slate-400 mt-1 mb-2">
+                    Attach an audio file and a QR code will be added to the book
+                    so readers can scan and listen.
+                  </div>
                   <div className="flex items-center gap-2">
                     <input
                       id="audio-upload"
@@ -936,8 +1167,8 @@ export default function BookBuilderPage() {
                         const f = e.target.files && e.target.files[0];
                         if (!f) return;
                         if (f.size > 25 * 1024 * 1024) {
-                          toast.error('Audio file too large (max 25MB)');
-                          e.currentTarget.value = '';
+                          toast.error("Audio file too large (max 25MB)");
+                          e.currentTarget.value = "";
                           return;
                         }
                         setAudioFile(f);
@@ -948,14 +1179,18 @@ export default function BookBuilderPage() {
                   </div>
                   {audioFileName && (
                     <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
-                      <span className="text-sm text-blue-700 truncate flex-1">🎵 {audioFileName}</span>
+                      <span className="text-sm text-blue-700 truncate flex-1">
+                        🎵 {audioFileName}
+                      </span>
                       <button
                         type="button"
                         onClick={() => {
                           setAudioFile(null);
                           setAudioFileName(null);
-                          const el = document.getElementById('audio-upload') as HTMLInputElement | null;
-                          if (el) el.value = '';
+                          const el = document.getElementById(
+                            "audio-upload",
+                          ) as HTMLInputElement | null;
+                          if (el) el.value = "";
                         }}
                         className="px-2 py-1 text-xs border rounded bg-white text-slate-700 hover:bg-red-50 hover:text-red-600"
                       >
@@ -966,24 +1201,34 @@ export default function BookBuilderPage() {
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" onClick={cancelGenerate}>Cancel</Button>
-                  <Button onClick={confirmGenerate} className="bg-blue-600 text-white">Generate</Button>
+                  <Button variant="outline" onClick={cancelGenerate}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={confirmGenerate}
+                    className="bg-blue-600 text-white"
+                  >
+                    Generate
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
         )}
         <div className="flex items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-semibold text-slate-800">Story Book Builder</h1>
+          <h1 className="text-3xl font-semibold text-slate-800">
+            Story Book Builder
+          </h1>
 
           <div className="flex gap-2">
             <Button variant="outline">
-              <Link href={'/story'}>
-                Back to Stories
-              </Link>
+              <Link href={"/story"}>Back to Stories</Link>
             </Button>
 
-            <Button onClick={() => router.push('/cart')} className="bg-green-600 text-white">
+            <Button
+              onClick={() => router.push("/cart")}
+              className="bg-green-600 text-white"
+            >
               Go to Cart
             </Button>
           </div>
@@ -997,17 +1242,25 @@ export default function BookBuilderPage() {
           </div>
         )}
 
-        {bookId && !book && loading && <p className="text-slate-600">Loading…</p>}
+        {bookId && !book && loading && (
+          <p className="text-slate-600">Loading…</p>
+        )}
 
         {book && (
           <div className="space-y-4">
             <div className="p-4 rounded-xl border bg-white">
-              <div className="text-sm text-slate-500">StoryBook  Title</div>
+              <div className="text-sm text-slate-500">StoryBook Title</div>
               <div className="text-lg font-semibold flex items-center gap-3">
                 {!editingTitle ? (
                   <>
                     <span>{book.title}</span>
-                    <Button variant="outline" onClick={() => setEditingTitle(true)} className="text-sm px-2 py-1">Edit</Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingTitle(true)}
+                      className="text-sm px-2 py-1"
+                    >
+                      Edit
+                    </Button>
                   </>
                 ) : (
                   <div className="flex items-center gap-2 w-full">
@@ -1018,21 +1271,30 @@ export default function BookBuilderPage() {
                       maxLength={50}
                     />
                     <div className="flex items-center gap-2">
-                      <div className="text-xs text-slate-400 mr-2">{draftTitle.trim().length}/50</div>
+                      <div className="text-xs text-slate-400 mr-2">
+                        {draftTitle.trim().length}/50
+                      </div>
                       <Button
                         onClick={async () => {
                           try {
                             const token = localStorage.getItem("token");
-                            if (!token) return toast.error("Please login again");
+                            if (!token)
+                              return toast.error("Please login again");
                             const trimmed = draftTitle.trim();
-                            if (trimmed.length === 0) return toast.error("Title cannot be empty");
-                            if (trimmed.length > 50) return toast.error("Title must be 50 characters or less");
+                            if (trimmed.length === 0)
+                              return toast.error("Title cannot be empty");
+                            if (trimmed.length > 50)
+                              return toast.error(
+                                "Title must be 50 characters or less",
+                              );
                             await updateBookTitle(book._id, trimmed, token);
                             await load(bookId!);
                             setEditingTitle(false);
                             toast.success("Book title updated");
                           } catch (err: any) {
-                            toast.error(err?.message || "Failed to update title");
+                            toast.error(
+                              err?.message || "Failed to update title",
+                            );
                           }
                         }}
                         className="px-3 py-1"
@@ -1041,7 +1303,14 @@ export default function BookBuilderPage() {
                         Save
                       </Button>
                     </div>
-                    <Button variant="outline" onClick={() => { setEditingTitle(false); setDraftTitle(book.title); }} className="px-3 py-1">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEditingTitle(false);
+                        setDraftTitle(book.title);
+                      }}
+                      className="px-3 py-1"
+                    >
                       Cancel
                     </Button>
                   </div>
@@ -1052,11 +1321,23 @@ export default function BookBuilderPage() {
               </div>
             </div>
 
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-              <SortableContext items={storyIds} strategy={verticalListSortingStrategy}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onDragEnd}
+            >
+              <SortableContext
+                items={storyIds}
+                strategy={verticalListSortingStrategy}
+              >
                 <div className="space-y-3">
                   {storyList.map((story) => (
-                    <SortableRow key={story._id} story={story} onRemove={handleRemove} onMove={moveStory} />
+                    <SortableRow
+                      key={story._id}
+                      story={story}
+                      onRemove={handleRemove}
+                      onMove={moveStory}
+                    />
                   ))}
                 </div>
               </SortableContext>
@@ -1080,8 +1361,14 @@ export default function BookBuilderPage() {
                 </button>
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
                   <p className="font-semibold mb-1">Quick Generate PDF</p>
-                  <p>Generate quick preview PDF (no cover image or extra details).</p>
-                  <p className="mt-1">Click the button and wait for it to return back to its blue color. Then scroll down and click &quot;Preview PDF&quot;.</p>
+                  <p>
+                    Generate quick preview PDF (no cover image or extra
+                    details).
+                  </p>
+                  <p className="mt-1">
+                    Click the button and wait for it to return back to its blue
+                    color. Then scroll down and click &quot;Preview PDF&quot;.
+                  </p>
                   <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-slate-800"></div>
                 </div>
               </div>
@@ -1089,7 +1376,9 @@ export default function BookBuilderPage() {
 
             {subscriptionChecked && !hasPaidSubscription && (
               <div className="p-4 rounded-xl border bg-white space-y-2">
-                <div className="font-semibold text-slate-800">Want a hardcopy of your book?</div>
+                <div className="font-semibold text-slate-800">
+                  Want a hardcopy of your book?
+                </div>
                 <div className="text-sm text-slate-600">
                   Buy a subscription plan to enable hardcopy ordering.
                 </div>
@@ -1106,47 +1395,57 @@ export default function BookBuilderPage() {
 
             {hasPaidSubscription && (
               <div className="p-4 rounded-xl border bg-white space-y-3">
-                <div className="font-semibold text-slate-800">Print Settings</div>
-                <div className="text-xs text-slate-500">Fields marked <span className="text-red-600">*</span> are required</div>
+                <div className="font-semibold text-slate-800">
+                  Print Settings
+                </div>
+                <div className="text-xs text-slate-500">
+                  Fields marked <span className="text-red-600">*</span> are
+                  required
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Contact Email <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="you@example.com"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Contact Email <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="you@example.com"
-                    value={contactEmail}
-                    onChange={(e) => setContactEmail(e.target.value)}
-                  />
-                </div>
+                  <div>
+                    <div className="text-sm text-slate-500">
+                      Book Size <span className="text-red-600">*</span>
+                    </div>
+                    <select
+                      className="p-2 border rounded w-full"
+                      value={trimSize}
+                      onChange={(e) => setTrimSize(e.target.value)}
+                    >
+                      {luluOptions.sizes.map((s) => (
+                        <option key={s.code} value={s.code}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <div className="text-sm text-slate-500">Book Size <span className="text-red-600">*</span></div>
-                  <select
-                    className="p-2 border rounded w-full"
-                    value={trimSize}
-                    onChange={(e) => setTrimSize(e.target.value)}
-                  >
-                    {luluOptions.sizes.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">No of Copies <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="1"
-                    type="number"
-                    min={1}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value) || 1)}
-                  />
-                </div>
-                {/* <input
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      No of Copies <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="1"
+                      type="number"
+                      min={1}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+                    />
+                  </div>
+                  {/* <input
                   className="p-2 border rounded"
                   placeholder="Interior Page Count"
                   type="number"
@@ -1154,7 +1453,7 @@ export default function BookBuilderPage() {
                   value={pageCount}
                   onChange={(e) => setPageCount(Number(e.target.value) || 1)}
                 /> */}
-                {/* <div>
+                  {/* <div>
                   <label className="block text-xs text-slate-600 mb-1">Shipping Level</label>
                   <select
                     className="p-2 border rounded w-full"
@@ -1174,28 +1473,30 @@ export default function BookBuilderPage() {
                     <option value="EXPRESS">EXPRESS</option>
                   </select>
                 </div> */}
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Shipping Option <span className="text-red-600">*</span></label>
-                  <select
-                    className="p-2 border rounded w-full"
-                    value={shippingOption}
-                    onChange={(e) => {
-                      setShippingOption(e.target.value);
-                      setShippingLevel(e.target.value);
-                    }}
-                    aria-label="Shipping Option"
-                  >
-                    <option value="MAIL">MAIL</option>
-                    <option value="PRIORITY_MAIL">PRIORITY_MAIL</option>
-                    <option value="GROUND_HD">GROUND_HD</option>
-                    <option value="GROUND_BUS">GROUND_BUS</option>
-                    <option value="GROUND">GROUND</option>
-                    <option value="EXPEDITED">EXPEDITED</option>
-                    <option value="EXPRESS">EXPRESS</option>
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Shipping Option <span className="text-red-600">*</span>
+                    </label>
+                    <select
+                      className="p-2 border rounded w-full"
+                      value={shippingOption}
+                      onChange={(e) => {
+                        setShippingOption(e.target.value);
+                        setShippingLevel(e.target.value);
+                      }}
+                      aria-label="Shipping Option"
+                    >
+                      <option value="MAIL">MAIL</option>
+                      <option value="PRIORITY_MAIL">PRIORITY_MAIL</option>
+                      <option value="GROUND_HD">GROUND_HD</option>
+                      <option value="GROUND_BUS">GROUND_BUS</option>
+                      <option value="GROUND">GROUND</option>
+                      <option value="EXPEDITED">EXPEDITED</option>
+                      <option value="EXPRESS">EXPRESS</option>
+                    </select>
+                  </div>
 
-                {/* <div>
+                  {/* <div>
                   <label className="block text-xs text-slate-600 mb-1">Trim Size</label>
                   <select
                     className="p-2 border rounded w-full"
@@ -1206,158 +1507,247 @@ export default function BookBuilderPage() {
                   </select>
                 </div> */}
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Binding</label>
-                  <select className="p-2 border rounded w-full" value={binding} onChange={(e) => setBinding(e.target.value)}>
-                    {luluOptions.bindings.map((b) => (
-                      <option key={b.code} value={b.code}>
-                        {b.label} ({b.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Binding
+                    </label>
+                    <select
+                      className="p-2 border rounded w-full"
+                      value={binding}
+                      onChange={(e) => setBinding(e.target.value)}
+                    >
+                      {luluOptions.bindings.map((b) => (
+                        <option key={b.code} value={b.code}>
+                          {b.label} ({b.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Interior Color</label>
-                  <select className="p-2 border rounded w-full" value={interiorColor} onChange={(e) => setInteriorColor(e.target.value)}>
-                    {luluOptions.interiorColors.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.label} ({c.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Interior Color
+                    </label>
+                    <select
+                      className="p-2 border rounded w-full"
+                      value={interiorColor}
+                      onChange={(e) => setInteriorColor(e.target.value)}
+                    >
+                      {luluOptions.interiorColors.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.label} ({c.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Paper Type</label>
-                  <select className="p-2 border rounded w-full" value={paperType} onChange={(e) => setPaperType(e.target.value)}>
-                    {luluOptions.paperTypes.map((p) => (
-                      <option key={p.code} value={p.code}>
-                        {p.label} ({p.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Paper Type
+                    </label>
+                    <select
+                      className="p-2 border rounded w-full"
+                      value={paperType}
+                      onChange={(e) => setPaperType(e.target.value)}
+                    >
+                      {luluOptions.paperTypes.map((p) => (
+                        <option key={p.code} value={p.code}>
+                          {p.label} ({p.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Cover Finish</label>
-                  <select className="p-2 border rounded w-full" value={coverFinish} onChange={(e) => setCoverFinish(e.target.value)}>
-                    {luluOptions.coverFinishes.map((f) => (
-                      <option key={f.code} value={f.code}>
-                        {f.label} ({f.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Cover Finish
+                    </label>
+                    <select
+                      className="p-2 border rounded w-full"
+                      value={coverFinish}
+                      onChange={(e) => setCoverFinish(e.target.value)}
+                    >
+                      {luluOptions.coverFinishes.map((f) => (
+                        <option key={f.code} value={f.code}>
+                          {f.label} ({f.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Custom Cover Width</label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="e.g. 12.325"
-                    value={customCoverWidth}
-                    onChange={(e) => setCustomCoverWidth(e.target.value)}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Custom Cover Width
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="e.g. 12.325"
+                      value={customCoverWidth}
+                      onChange={(e) => setCustomCoverWidth(e.target.value)}
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Custom Cover Height</label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="e.g. 9.25"
-                    value={customCoverHeight}
-                    onChange={(e) => setCustomCoverHeight(e.target.value)}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Custom Cover Height
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="e.g. 9.25"
+                      value={customCoverHeight}
+                      onChange={(e) => setCustomCoverHeight(e.target.value)}
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Cover Unit</label>
-                  <select className="p-2 border rounded w-full" value={customCoverUnit} onChange={(e) => setCustomCoverUnit(e.target.value)}>
-                    <option value="in">in</option>
-                    <option value="mm">mm</option>
-                    <option value="cm">cm</option>
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Cover Unit
+                    </label>
+                    <select
+                      className="p-2 border rounded w-full"
+                      value={customCoverUnit}
+                      onChange={(e) => setCustomCoverUnit(e.target.value)}
+                    >
+                      <option value="in">in</option>
+                      <option value="mm">mm</option>
+                      <option value="cm">cm</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Computed POD Package ID</label>
-                  <input className="p-2 border rounded w-full bg-slate-50" value={podPackageId} readOnly />
-                </div>
-                {/* <input
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Computed POD Package ID
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full bg-slate-50"
+                      value={podPackageId}
+                      readOnly
+                    />
+                  </div>
+                  {/* <input
                   className="p-2 border rounded"
                   placeholder="Cover PDF URL (optional)"
                   value={coverUrl}
                   onChange={(e) => setCoverUrl(e.target.value)}
                 /> */}
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Recipient Name <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="Full name"
-                    value={shippingAddress.name}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Recipient Name <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="Full name"
+                      value={shippingAddress.name}
+                      onChange={(e) =>
+                        setShippingAddress({
+                          ...shippingAddress,
+                          name: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Street Address <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="123 Example St"
-                    value={shippingAddress.street1}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, street1: e.target.value })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Street Address <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="123 Example St"
+                      value={shippingAddress.street1}
+                      onChange={(e) =>
+                        setShippingAddress({
+                          ...shippingAddress,
+                          street1: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">City <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="City"
-                    value={shippingAddress.city}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      City <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="City"
+                      value={shippingAddress.city}
+                      onChange={(e) =>
+                        setShippingAddress({
+                          ...shippingAddress,
+                          city: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">State Code <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="State (e.g., NY)"
-                    value={shippingAddress.state_code}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, state_code: e.target.value })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      State Code <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="State (e.g., NY)"
+                      value={shippingAddress.state_code}
+                      onChange={(e) =>
+                        setShippingAddress({
+                          ...shippingAddress,
+                          state_code: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Postcode <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="Postcode"
-                    value={shippingAddress.postcode}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, postcode: e.target.value })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Postcode <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="Postcode"
+                      value={shippingAddress.postcode}
+                      onChange={(e) =>
+                        setShippingAddress({
+                          ...shippingAddress,
+                          postcode: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Country Code <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="US"
-                    value={shippingAddress.country_code}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, country_code: e.target.value })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Country Code <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="US"
+                      value={shippingAddress.country_code}
+                      onChange={(e) =>
+                        setShippingAddress({
+                          ...shippingAddress,
+                          country_code: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Phone Number <span className="text-red-600">*</span></label>
-                  <input
-                    className="p-2 border rounded w-full"
-                    placeholder="+1 555555555"
-                    value={shippingAddress.phone_number}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, phone_number: e.target.value })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">
+                      Phone Number <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      className="p-2 border rounded w-full"
+                      placeholder="+1 555555555"
+                      value={shippingAddress.phone_number}
+                      onChange={(e) =>
+                        setShippingAddress({
+                          ...shippingAddress,
+                          phone_number: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -1408,7 +1798,10 @@ export default function BookBuilderPage() {
                   <Button
                     onClick={() => {
                       if (!requirePaidSubscriptionForPdf()) return;
-                      window.open((book && (book as any).pdfUrl) || pdfUrl, "_blank");
+                      window.open(
+                        (book && (book as any).pdfUrl) || pdfUrl,
+                        "_blank",
+                      );
                     }}
                     className="bg-[#457B9D] text-white"
                   >
@@ -1448,15 +1841,14 @@ export default function BookBuilderPage() {
                 </Button>
               )}
 
-
-
               {/* Validation results are shown via toasts. */}
-
             </div>
 
             {computedTotal !== null && (
               <div className="p-4 rounded-xl border bg-white space-y-2">
-                <div className="font-semibold text-slate-800">Estimated Total</div>
+                <div className="font-semibold text-slate-800">
+                  Estimated Total
+                </div>
                 <div className="text-lg font-semibold text-slate-800">
                   {costEstimate?.currency || ""} {computedTotal.toFixed(2)}
                 </div>

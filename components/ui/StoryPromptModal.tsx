@@ -234,8 +234,6 @@
 //   );
 // }
 
-
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -249,6 +247,7 @@ import { Button } from "./Button";
 import { handleSessionExpiry } from "@/utils/handleSessionExpiry";
 import { toast } from "sonner";
 import { PrivateRoute } from "@/utils/RouteProtection";
+import TrialBanner from "@/components/ui/TrialBanner";
 const serverBaseUrl = process.env.NEXT_PUBLIC_BACKEND_SERVER_URL;
 
 interface StoryPromptModalProps {
@@ -261,6 +260,8 @@ export default function StoryPromptModal({
   onClose,
 }: StoryPromptModalProps) {
   const router = useRouter();
+  const [trialActive, setTrialActive] = useState(false);
+  const [trialEndDate, setTrialEndDate] = useState<string | null>(null);
   const [story, setStory] = useState("");
   const [activeMode, setActiveMode] = useState<"text" | "mic">("text");
   const activeModeRef = useRef(activeMode);
@@ -280,6 +281,44 @@ export default function StoryPromptModal({
     const saved = sessionStorage.getItem("story");
     if (saved) setStory(saved);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    const fetchTrial = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token || !serverBaseUrl) return;
+
+        const response = await fetch(`${serverBaseUrl}/user/plan/trial`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        if (cancelled) return;
+
+        if (!response.ok) {
+          if (handleSessionExpiry(data?.message, router)) return;
+          return;
+        }
+
+        setTrialActive(Boolean(data?.response?.trialActive));
+        setTrialEndDate(data?.response?.trialEndDate ?? null);
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchTrial();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, router]);
 
   useEffect(() => {
     sessionStorage.setItem("story", story);
@@ -317,7 +356,9 @@ export default function StoryPromptModal({
       // Save whatever was transcribed before the stop
       if (transcript) {
         console.log(transcript);
-        setTextTranscript((prev) => (prev ? prev + " " + transcript : transcript));
+        setTextTranscript((prev) =>
+          prev ? prev + " " + transcript : transcript,
+        );
       }
       resetTranscript();
 
@@ -413,6 +454,12 @@ export default function StoryPromptModal({
               </p>
             </div>
 
+            {trialActive && (
+              <div className="mb-4">
+                <TrialBanner trialEndDate={trialEndDate} />
+              </div>
+            )}
+
             {/* Textarea */}
             <div className="relative">
               <textarea
@@ -431,10 +478,11 @@ export default function StoryPromptModal({
                     setActiveMode("mic");
                     setTextTranscript(story);
                   }}
-                  className={`p-2 rounded-full transition duration-200 shadow-lg ${activeMode === "mic"
-                    ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                    : "bg-[#457B9D] hover:bg-[#1D3557] hover:shadow-xl transform hover:scale-110"
-                    }`}
+                  className={`p-2 rounded-full transition duration-200 shadow-lg ${
+                    activeMode === "mic"
+                      ? "bg-red-500 hover:bg-red-600 animate-pulse"
+                      : "bg-[#457B9D] hover:bg-[#1D3557] hover:shadow-xl transform hover:scale-110"
+                  }`}
                   title="Voice input"
                 >
                   <Mic className="w-4 h-4 text-white" />
@@ -442,10 +490,11 @@ export default function StoryPromptModal({
 
                 <button
                   onClick={() => setActiveMode("text")}
-                  className={`p-2 rounded-full transition duration-200 shadow-lg ${activeMode === "text"
-                    ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                    : "bg-[#457B9D] hover:bg-[#1D3557] hover:shadow-xl transform hover:scale-110"
-                    }`}
+                  className={`p-2 rounded-full transition duration-200 shadow-lg ${
+                    activeMode === "text"
+                      ? "bg-red-500 hover:bg-red-600 animate-pulse"
+                      : "bg-[#457B9D] hover:bg-[#1D3557] hover:shadow-xl transform hover:scale-110"
+                  }`}
                   title="Writing assistant"
                 >
                   <PenTool className="w-4 h-4 text-white" />

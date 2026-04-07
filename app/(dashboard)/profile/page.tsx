@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import StoryImagePanel from "@/components/ui/StoryImagePanel";
 import InputField from "@/components/ui/InputField";
 import ActionRequiredModal from "@/components/ui/ActionRequiredModal";
+import TrialBanner from "@/components/ui/TrialBanner";
 import { ProtectedUserRoute } from "@/utils/RouteProtection";
 import { handleSessionExpiry } from "@/utils/handleSessionExpiry";
 import { toast } from "sonner";
@@ -15,6 +16,11 @@ type Subscription = {
   subscriptionFound: boolean;
 };
 
+type TrialStatus = {
+  trialActive: boolean;
+  trialEndDate: string | null;
+};
+
 const Profile = () => {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
@@ -23,15 +29,46 @@ const Profile = () => {
     expiryDate: "",
     subscriptionFound: false,
   });
+  const [trial, setTrial] = useState<TrialStatus>({
+    trialActive: false,
+    trialEndDate: null,
+  });
   const [email, setEmail] = useState<string>("");
   useEffect(() => {
     fetchSubscription();
+    fetchTrialStatus();
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       const user = JSON.parse(storedUser);
       setEmail(user.email);
     }
   }, []);
+
+  const fetchTrialStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${serverBaseUrl}/user/plan/trial`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        if (handleSessionExpiry(data.message, router)) return;
+        return;
+      }
+
+      setTrial({
+        trialActive: Boolean(data?.response?.trialActive),
+        trialEndDate: data?.response?.trialEndDate ?? null,
+      });
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchSubscription = async () => {
     try {
@@ -69,6 +106,10 @@ const Profile = () => {
           <h1 className="text-3xl sm:text-4xl text-[#1D3557] font-[Cormorant_Garamond] font-bold">
             General Info
           </h1>
+
+          {trial.trialActive && (
+            <TrialBanner trialEndDate={trial.trialEndDate} />
+          )}
 
           <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
             <InputField

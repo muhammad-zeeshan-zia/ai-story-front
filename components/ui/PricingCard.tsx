@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 const serverBaseUrl = process.env.NEXT_PUBLIC_BACKEND_SERVER_URL;
 // const stripePublicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY;
- 
+
 const stripePublicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY as string;
 
 interface PricingPlan {
@@ -53,7 +53,7 @@ const PricingCard = ({ plan }: PricingCardProps) => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(body),
-        }
+        },
       );
       const responseData = await response.json();
       if (!response.ok) {
@@ -96,9 +96,9 @@ const PricingCard = ({ plan }: PricingCardProps) => {
 
   return (
     <div
-      className={`relative m-4 group transform transition-all duration-500 hover:scale-105 ${
-        plan.featured ? "scale-105 z-10" : ""
-      } w-full sm:max-w-[360px] h-full flex`}
+      className={`relative group transform transition-all duration-500 hover:scale-[1.02] ${
+        plan.featured ? "lg:scale-[1.01] z-10" : ""
+      } w-full`}
     >
       <div
         className={`absolute -inset-1 ${getGradient()} rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500`}
@@ -108,9 +108,9 @@ const PricingCard = ({ plan }: PricingCardProps) => {
           plan.featured
             ? `${getGradient()} text-white shadow-2xl border-0`
             : "bg-white/80 backdrop-blur-xl text-gray-800 border border-gray-200/50 shadow-xl"
-        } rounded-2xl transition-all duration-300 flex flex-col w-full`}
+        } rounded-2xl transition-all duration-300 flex flex-col w-full min-h-160`}
       >
-        <div className="p-6 sm:p-8 text-center flex flex-col grow">
+        <div className="p-6 sm:p-8 text-center flex flex-col grow pb-8">
           <div className="mb-6">
             <div
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-4 ${
@@ -163,11 +163,11 @@ const PricingCard = ({ plan }: PricingCardProps) => {
             </div>
           </div>
 
-          <div className="space-y-2 flex-grow h-full">
+          <div className="space-y-2 grow">
             {plan.features.map((feature, index) => (
               <div key={index} className="flex items-start text-left">
                 <div
-                  className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 ${
+                  className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 ${
                     plan.featured
                       ? "bg-white/20 text-white"
                       : "bg-[#457B9D] text-white"
@@ -187,7 +187,7 @@ const PricingCard = ({ plan }: PricingCardProps) => {
           </div>
 
           <button
-            className={`w-60 mx-auto absolute translate-x-[25%] rounded-full bottom-[-25px] left-0 py-4 px-6 font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+            className={`w-full mt-8 rounded-full py-4 px-6 font-semibold transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl ${
               plan.featured
                 ? "bg-white text-[#457B9D] hover:bg-[#E8F1F2] hover:text-[#1D3557] shadow-white/20 z-20"
                 : `${getGradient()} text-white hover:shadow-2xl z-20`

@@ -23,6 +23,7 @@ const Header = () => {
 
   const navItems = [
     { label: "Home", path: "/landing-page" },
+    { label: "Pricing", path: "/select-plan" },
     { label: "How this works?", path: "/how-it-works" },
     { label: "FAQ's", path: "/faqs" },
     ...(token ? [{ label: "Story", path: "/story" }] : []),
@@ -43,12 +44,7 @@ const Header = () => {
             className="text-[#1D3557] text-2xl font-serif font-bold tracking-wider cursor-pointer"
             onClick={() => router.push("/landing-page")}
           >
-            <Image
-              src="/logo.png"
-              width={60}
-              height={60}
-              alt="Logo"
-            />
+            <Image src="/logo.png" width={60} height={60} alt="Logo" />
           </div>
 
           {/* Desktop Navigation */}
