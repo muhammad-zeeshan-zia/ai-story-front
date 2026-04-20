@@ -64,6 +64,11 @@ const menu = [
     label: "Landing Page Editor",
     href: "/admin/landingpage-editor",
   },
+  {
+    icon: <MdOutlineAutoStories />,
+    label: "Marketing Page Editor",
+    href: "/admin/marketing-editor",
+  },
    {
     icon: < MdOutlineAutoStories/>,
     label: "Email Editor",
