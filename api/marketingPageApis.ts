@@ -59,9 +59,12 @@ export type MarketingPageContent = {
     steps: MarketingStep[];
   };
   learningCenter: {
+    label?: string;
     title: string;
-    paragraphs: string[];
+    description?: string;
+    paragraphs?: string[];
     videoUrl: string;
+    steps?: MarketingStep[];
     accountSetup: {
       title: string;
       subtitle: string;

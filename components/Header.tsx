@@ -25,6 +25,7 @@ const Header = () => {
     { label: "Home", path: "/landing-page" },
     { label: "Pricing", path: "/select-plan" },
     { label: "How this works?", path: "/how-it-works" },
+    { label: "Tutorial", path: "/tutorial" },
     { label: "FAQ's", path: "/faqs" },
     ...(token ? [{ label: "Story", path: "/story" }] : []),
     ...(token && !isPublic ? [{ label: "Profile", path: "/profile" }] : []),

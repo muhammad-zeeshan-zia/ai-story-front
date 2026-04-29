@@ -50,6 +50,11 @@ export default function MarketingEditorPage() {
     return <div className="p-8 text-gray-600">Loading marketing editor...</div>;
   }
 
+  const learningCenterSteps =
+    content.learningCenter.steps?.length
+      ? content.learningCenter.steps.slice(0, 4)
+      : (content.learningCenter.accountSetup?.steps || []).slice(0, 4);
+
   const uploadHeroImage: React.ChangeEventHandler<HTMLInputElement> = async (
     e
   ) => {
@@ -286,11 +291,72 @@ export default function MarketingEditorPage() {
 
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
         <h3 className="font-semibold text-gray-800">Learning Center</h3>
+        <textarea rows={2} className="w-full rounded-lg border border-gray-200 px-3 py-2" value={content.learningCenter.label || ""} onChange={(e) => setContent((prev) => prev ? { ...prev, learningCenter: { ...prev.learningCenter, label: e.target.value } } : prev)} placeholder="Section label" />
         <textarea rows={2} className="w-full rounded-lg border border-gray-200 px-3 py-2" value={content.learningCenter.title} onChange={(e) => setContent((prev) => prev ? { ...prev, learningCenter: { ...prev.learningCenter, title: e.target.value } } : prev)} placeholder="Section title" />
-        <textarea className="w-full rounded-lg border border-gray-200 px-3 py-2" rows={4} value={toMultiline(content.learningCenter.paragraphs)} onChange={(e) => setContent((prev) => prev ? { ...prev, learningCenter: { ...prev.learningCenter, paragraphs: fromMultiline(e.target.value) } } : prev)} placeholder="Paragraphs (one per line)" />
+        <textarea className="w-full rounded-lg border border-gray-200 px-3 py-2" rows={4} value={content.learningCenter.description || ""} onChange={(e) => setContent((prev) => prev ? { ...prev, learningCenter: { ...prev.learningCenter, description: e.target.value } } : prev)} placeholder="Description" />
         <input className="w-full rounded-lg border border-gray-200 px-3 py-2" value={content.learningCenter.videoUrl} onChange={(e) => setContent((prev) => prev ? { ...prev, learningCenter: { ...prev.learningCenter, videoUrl: normalizeYouTubeEmbedUrl(e.target.value) } } : prev)} placeholder="YouTube URL" />
-        <textarea rows={2} className="w-full rounded-lg border border-gray-200 px-3 py-2" value={content.learningCenter.accountSetup.title} onChange={(e) => setContent((prev) => prev ? { ...prev, learningCenter: { ...prev.learningCenter, accountSetup: { ...prev.learningCenter.accountSetup, title: e.target.value } } } : prev)} placeholder="Account setup title" />
-        <textarea rows={2} className="w-full rounded-lg border border-gray-200 px-3 py-2" value={content.learningCenter.accountSetup.subtitle} onChange={(e) => setContent((prev) => prev ? { ...prev, learningCenter: { ...prev.learningCenter, accountSetup: { ...prev.learningCenter.accountSetup, subtitle: e.target.value } } } : prev)} placeholder="Account setup subtitle" />
+        {learningCenterSteps.map((step, idx) => (
+          <div key={idx} className="rounded-lg border border-gray-200 p-3 space-y-2">
+            <div className="grid grid-cols-3 gap-2">
+              <textarea
+                rows={2}
+                className="rounded border border-gray-200 px-2 py-1"
+                value={step.number}
+                onChange={(e) =>
+                  setContent((prev) => {
+                    if (!prev) return prev;
+                    const steps = [...(prev.learningCenter.steps || [])].slice(0, 4);
+                    steps[idx] = { ...steps[idx], number: e.target.value };
+                    return { ...prev, learningCenter: { ...prev.learningCenter, steps } };
+                  })
+                }
+                placeholder="Step number"
+              />
+              <textarea
+                rows={2}
+                className="col-span-2 rounded border border-gray-200 px-2 py-1"
+                value={step.label}
+                onChange={(e) =>
+                  setContent((prev) => {
+                    if (!prev) return prev;
+                    const steps = [...(prev.learningCenter.steps || [])].slice(0, 4);
+                    steps[idx] = { ...steps[idx], label: e.target.value };
+                    return { ...prev, learningCenter: { ...prev.learningCenter, steps } };
+                  })
+                }
+                placeholder="Step label (e.g. Step 1 of 4)"
+              />
+            </div>
+            <textarea
+              rows={2}
+              className="w-full rounded border border-gray-200 px-2 py-1"
+              value={step.title}
+              onChange={(e) =>
+                setContent((prev) => {
+                  if (!prev) return prev;
+                  const steps = [...(prev.learningCenter.steps || [])].slice(0, 4);
+                  steps[idx] = { ...steps[idx], title: e.target.value };
+                  return { ...prev, learningCenter: { ...prev.learningCenter, steps } };
+                })
+              }
+              placeholder="Step title"
+            />
+            <textarea
+              className="w-full rounded border border-gray-200 px-2 py-1"
+              rows={4}
+              value={toMultiline(step.points)}
+              onChange={(e) =>
+                setContent((prev) => {
+                  if (!prev) return prev;
+                  const steps = [...(prev.learningCenter.steps || [])].slice(0, 4);
+                  steps[idx] = { ...steps[idx], points: fromMultiline(e.target.value) };
+                  return { ...prev, learningCenter: { ...prev.learningCenter, steps } };
+                })
+              }
+              placeholder="One line per bullet point"
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

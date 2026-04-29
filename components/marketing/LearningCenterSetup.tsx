@@ -5,20 +5,38 @@ import MarketingVideo from "./MarketingVideo";
 const defaultSteps: MarketingStep[] = [
   {
     number: "1",
-    label: "Step 1 of 2",
-    title: "Create a New Account",
+    label: "Step 1 of 4",
+    title: "Create Your Learning Center Account",
     points: [
-      "Here's how to Access Your \"10-Day Trial\" Learning Modules at CSG's Learning Center",
+      "Use your active email address to create your free 10-day trial account.",
+      "Complete the required registration details and submit the form.",
     ],
   },
   {
     number: "2",
-    label: "Step 2 of 2",
-    title: "Verify Active Email",
+    label: "Step 2 of 4",
+    title: "Verify Your Email",
     points: [
-      "After creating your Learning Center account, you'll verify your email.",
-      "Click the verify button, check your email for the code, and enter it.",
-      "You now have access to the Starter Kit Learning Modules.",
+      "Open the verification email sent to your inbox.",
+      "Enter the verification code to activate your account.",
+    ],
+  },
+  {
+    number: "3",
+    label: "Step 3 of 4",
+    title: "Open Starter Modules",
+    points: [
+      "Go to your dashboard and open the starter learning modules.",
+      "Review the guided lessons and activities in order.",
+    ],
+  },
+  {
+    number: "4",
+    label: "Step 4 of 4",
+    title: "Begin Your Next Story Session",
+    points: [
+      "Choose one memory activity and complete your first session.",
+      "Save your progress so you can continue building your storybook.",
     ],
   },
 ];
@@ -27,22 +45,23 @@ const LearningCenterSetup = ({
   content,
 }: {
   content?: {
+    label?: string;
     title?: string;
+    description?: string;
     paragraphs?: string[];
     videoUrl?: string;
+    steps?: MarketingStep[];
     accountSetup?: { title?: string; subtitle?: string; steps?: MarketingStep[] };
   };
 }) => {
-  const steps = content?.accountSetup?.steps?.length
-    ? content.accountSetup.steps
+  const steps = content?.steps?.length
+    ? content.steps.slice(0, 4)
+    : content?.accountSetup?.steps?.length
+    ? content.accountSetup.steps.slice(0, 4)
     : defaultSteps;
-  const paragraphs = content?.paragraphs?.length
-    ? content.paragraphs
-    : [
-        "Great work completing your practice stories... this is an important step.",
-        "To continue, create your free account in the Capturing Story Gems - Learning Center.",
-        "Your 10-day trial gives you access to guided modules with lessons and activities, all organized and ready for you.",
-      ];
+  const description =
+    content?.description ||
+    (content?.paragraphs?.length ? content.paragraphs.join("\n\n") : "");
 
   return (
     // Outer wrapper with the light pastel blue background
@@ -51,17 +70,19 @@ const LearningCenterSetup = ({
       <div className="w-full max-w-6xl flex flex-col items-start">
         {/* Top Header Section */}
         <div className="mb-8">
+          <span className="text-[#76AEC3] text-xs font-semibold tracking-[0.2em] uppercase mb-4 block whitespace-pre-line">
+            {content?.label ?? "Learning Center"}
+          </span>
           {/* Main Heading */}
           <h2 className="font-serif text-2xl md:text-3xl lg:text-4xl font-semibold text-[#2E2E2E] mb-4 tracking-tight leading-[1.15] whitespace-pre-line">
             {content?.title ?? "CSG Learning Center - Free 10-Day Trial"}
           </h2>
 
-          {/* Description Paragraphs */}
-          <div className="text-[#6C6C6C] text-sm md:text-base leading-relaxed space-y-2 max-w-3xl">
-            {paragraphs.map((paragraph, idx) => (
-              <p key={idx} className="whitespace-pre-line">{paragraph}</p>
-            ))}
-          </div>
+          {/* Description Paragraph */}
+          <p className="text-[#6C6C6C] text-sm md:text-base leading-relaxed max-w-3xl whitespace-pre-line">
+            {description ||
+              "Great work completing your practice stories. Start your free Learning Center trial and follow these steps to continue your story journey."}
+          </p>
         </div>
 
         <div className="mb-8 w-full">
@@ -70,17 +91,6 @@ const LearningCenterSetup = ({
 
         {/* Main White Card Container */}
         <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 lg:p-10">
-          {/* Card Header Section */}
-          <div className="mb-8">
-            <h3 className="font-serif text-2xl font-semibold text-[#2E2E2E] mb-2 tracking-tight leading-[1.15] whitespace-pre-line">
-              {content?.accountSetup?.title ?? "Account Setup"}
-            </h3>
-            <p className="text-gray-500 text-sm md:text-base leading-relaxed whitespace-pre-line">
-              {content?.accountSetup?.subtitle ??
-                "Quick and easy registration to access your learning modules"}
-            </p>
-          </div>
-
           {/* Steps Container */}
           <div className="space-y-10">
             {steps.map((step, idx) => (

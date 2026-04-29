@@ -120,7 +120,7 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
                 />
               </div>
 
-              <p className="text-xs text-gray-800 font-semibold">Tips, prompts &amp; worksheets</p>
+              <p className="text-xs text-gray-800 font-semibold">30-Minutes to Story Free-10-Day-Trial</p>
             </div>
 
             <div className="flex flex-col items-center text-center">
@@ -138,7 +138,7 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
                 />
               </div>
 
-              <p className="text-xs text-gray-800 font-semibold">Simple step-by-step process</p>
+              <p className="text-xs text-gray-800 font-semibold">Simple Steps: Awaken, Compose, Share</p>
             </div>
 
             <div className="flex flex-col items-center text-center">
@@ -156,7 +156,7 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
                 />
               </div>
 
-              <p className="text-xs text-gray-800 font-semibold">Preserve memories for generations</p>
+              <p className="text-xs text-gray-800 font-semibold">Preserve Meaningful Memories Family will Cherish</p>
             </div>
           </div>
         </section>
