@@ -1,11 +1,11 @@
 "use client";
 
-import React from 'react';
-import book from '@/public/assets/book.png';
-import { toast } from 'sonner';
-import { subscribeNewsletter } from '@/api/emailTemplateApis';
+import React from "react";
+import book from "@/public/assets/book.png";
+import { toast } from "sonner";
+import { subscribeNewsletter } from "@/api/emailTemplateApis";
 
-const TEMPLATE_KEY = 'lead-newsletter';
+const TEMPLATE_KEY = "lead-newsletter";
 
 type LeadModalProps = {
   isOpen: boolean;
@@ -24,9 +24,9 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
     setSubmitting(true);
     try {
       const formData = new FormData(e.currentTarget);
-      const fullName = String(formData.get('fullName') ?? '').trim();
-      const email = String(formData.get('email') ?? '').trim();
-      const firstName = fullName.split(/\s+/).filter(Boolean)[0] ?? '';
+      const fullName = String(formData.get("fullName") ?? "").trim();
+      const email = String(formData.get("email") ?? "").trim();
+      const firstName = fullName.split(/\s+/).filter(Boolean)[0] ?? "";
 
       await subscribeNewsletter({
         key: TEMPLATE_KEY,
@@ -36,7 +36,7 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
 
       onSuccess(firstName || undefined);
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to submit');
+      toast.error(err?.message || "Failed to submit");
     } finally {
       setSubmitting(false);
     }
@@ -51,8 +51,18 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
           aria-label="Close"
           className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-gray-500 hover:bg-white transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
@@ -67,12 +77,14 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
 
           <div className="w-full md:w-1/2 p-6 md:p-8 md:pl-0 flex flex-col justify-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl leading-[1.2] font-semibold text-gray-900 mb-3 tracking-tight">
-              Capture a Meaningful Memoir —<br />
-              Even If You're Not a Writer
+              Your Life Memories Matter
+              <br />
+              Bring Them To Life!
             </h1>
 
             <p className="text-gray-700 text-base mb-6">
-              Discover simple prompts to help you write and preserve your cherished family stories.
+              Discover simple prompts to help you write and preserve your
+              cherished family stories.
             </p>
 
             <form onSubmit={handleSubmit} className="w-full max-w-sm">
@@ -97,7 +109,7 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
                 disabled={submitting}
                 className="w-full bg-[#4a8ecc] hover:bg-[#397abb] text-white font-medium text-sm py-2.5 px-4 rounded transition duration-200"
               >
-                {submitting ? 'Sending…' : 'Get the FREE Starter Kit →'}
+                {submitting ? "Sending…" : "Get the FREE Starter Kit →"}
               </button>
             </form>
           </div>
@@ -108,7 +120,9 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
             <div className="flex flex-col items-center text-center">
               <div className="w-full flex items-center mb-4">
                 <div className="h-px bg-gray-300 flex-1"></div>
-                <span className="px-3 text-gray-800 font-medium text-sm whitespace-nowrap">Inside the Starter Kit</span>
+                <span className="px-3 text-gray-800 font-medium text-sm whitespace-nowrap">
+                  Inside the Starter Kit
+                </span>
                 <div className="h-px bg-gray-300 flex-1"></div>
               </div>
 
@@ -120,13 +134,17 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
                 />
               </div>
 
-              <p className="text-xs text-gray-800 font-semibold">30-Minutes to Story Free-10-Day-Trial</p>
+              <p className="text-xs text-gray-800 font-semibold">
+                30-Minutes to Story Free-10-Day-Trial
+              </p>
             </div>
 
             <div className="flex flex-col items-center text-center">
               <div className="w-full flex items-center mb-4">
                 <div className="h-px bg-gray-300 flex-1"></div>
-                <span className="px-3 text-gray-800 font-medium text-sm whitespace-nowrap">How the Starter Kit Works</span>
+                <span className="px-3 text-gray-800 font-medium text-sm whitespace-nowrap">
+                  How the Starter Kit Works
+                </span>
                 <div className="h-px bg-gray-300 flex-1"></div>
               </div>
 
@@ -138,13 +156,17 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
                 />
               </div>
 
-              <p className="text-xs text-gray-800 font-semibold">Simple Steps: Awaken, Compose, Share</p>
+              <p className="text-xs text-gray-800 font-semibold">
+                Simple Steps: Awaken, Compose, Share
+              </p>
             </div>
 
             <div className="flex flex-col items-center text-center">
               <div className="w-full flex items-center mb-4">
                 <div className="h-px bg-gray-300 flex-1"></div>
-                <span className="px-3 text-gray-800 font-medium text-sm whitespace-nowrap">Why Capture These Stories?</span>
+                <span className="px-3 text-gray-800 font-medium text-sm whitespace-nowrap">
+                  Why Capture These Stories?
+                </span>
                 <div className="h-px bg-gray-300 flex-1"></div>
               </div>
 
@@ -156,7 +178,9 @@ export function LeadModal({ isOpen, onClose, onSuccess }: LeadModalProps) {
                 />
               </div>
 
-              <p className="text-xs text-gray-800 font-semibold">Preserve Meaningful Memories Family will Cherish</p>
+              <p className="text-xs text-gray-800 font-semibold">
+                Preserve Meaningful Memories Family will Cherish
+              </p>
             </div>
           </div>
         </section>

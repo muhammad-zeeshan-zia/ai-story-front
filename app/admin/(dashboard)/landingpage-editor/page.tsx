@@ -407,7 +407,7 @@ export default function LandingPageEditor() {
       {/* Top Action Bar */}
       <div className="w-full bg-white rounded-xl p-5 sm:p-6 shadow-[0_2px_10px_rgba(0,0,0,0.04)] mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-xl font-bold text-[#1e293b]">
-          Landing Page Content
+          Marketing Free-Trial Page Editor
         </h1>
         <button
           type="button"

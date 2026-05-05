@@ -104,3 +104,15 @@ button {
 .custom-quill-container .ql-editor b {
   font-weight: 700;
 }
+
+/* Hide scrollbars utility for the sidebar */
+.sidebar-scrollbar-none {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE 10+ and Edge */
+  -ms-overflow-style: none;
+}
+.sidebar-scrollbar-none::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
